@@ -3,6 +3,9 @@ from functools import partial, wraps
 from werkzeug.utils import secure_filename
 import os
 import quart_cors
+import datetime
+import time
+from quart import json
 from can_parser import *
 
 app = Quart(__name__)
@@ -39,13 +42,25 @@ async def upload_file():
 
         # Save file
         if uploadedFile and allowed_file(uploadedFile.filename):
-            filename = secure_filename(uploadedFile.filename)
+
+            current_time = datetime.datetime.now().strftime("%d-%m-%y_%X_")
+            filename = current_time + secure_filename(uploadedFile.filename)
             uploadedFile.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
 
             # Send file to the CAN parser to be processed
-            process_file(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+            msg_data = process_file(os.path.join(app.config["UPLOAD_FOLDER"], filename))
 
-            return "File uploaded & processed"
+            # Convert the message list to JSON
+            msg_data_json = json.dumps(
+                [msg.__dict__ for msg in msg_data], ensure_ascii=False, indent=4
+            )
+
+            obj = open(f"JSON_dumps/{current_time}_JSON.txt", "w")
+            obj.write(msg_data_json)
+            obj.close
+
+            return jsonify([msg.__dict__ for msg in msg_data])
+            # return msg_data_json
 
 
 app.run()

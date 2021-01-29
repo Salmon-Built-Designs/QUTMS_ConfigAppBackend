@@ -1,8 +1,9 @@
 from numpy.core.shape_base import block
 from can_ids import *
+from quart import jsonify, json
 import os
 
-# Object to contain message information
+# Object to contain all raw message information
 class raw_can_msg:
     def __init__(
         self,
@@ -22,17 +23,37 @@ class raw_can_msg:
         return f"[{self.timestamp}]: [{hex(self.id)}, [{self.data}]]"
 
 
+# Object to contain message relevant information read to be jsonified
+class split_can_msg:
+    def __init__(
+        self,
+        timestamp,
+        msg_type,
+        message="",
+    ):
+        self.timestamp = timestamp
+        self.msg_type = msg_type
+        self.message = message
+
+    def __str__(self):
+        return f"[{self.timestamp}ms]:" + self.msg_type + " | " + str(self.message)
+
+
 def process_file(path):
     if not os.path.exists(path):
         print("log file doesn't exist")
         return
 
+    # Process the raw binary file into a list of objects
     raw_msgs = read_log_file(path)
     print(len(raw_msgs), "data entries found.")
 
+    # Parse messages to create readable information
     parsed_msgs = parse_can_msgs(raw_msgs)
-    print(*parsed_msgs, sep="\n")
     print("All messages parsed")
+
+    # Return list of message object ready to be turned into JSON
+    return parsed_msgs
 
 
 # Read binary file and add all messages to a list
@@ -81,41 +102,42 @@ def read_log_file(path):
 
 
 def parse_pdm_startup(msg: raw_can_msg):
-    return (msg.timestamp, "PDM_InitiateStartup")
+    # return (msg.timestamp, "PDM_InitiateStartup")
+    return split_can_msg(msg.timestamp, "PDM_InitiateStartup")
 
 
 def parse_pdm_startupok(msg: raw_can_msg):
     channels = (
         msg.data[0] | (msg.data[1] << 8) | (msg.data[2] << 16) | (msg.data[3] << 24)
     )
-    return (msg.timestamp, "PDM_StartupOk", bin(channels))
+    return split_can_msg(msg.timestamp, "PDM_StartupOk", bin(channels))
 
 
 def parse_pdm_setchannels(msg: raw_can_msg):
     channels = (
         msg.data[0] | (msg.data[1] << 8) | (msg.data[2] << 16) | (msg.data[3] << 24)
     )
-    return (msg.timestamp, "PDM_SetChannels", bin(channels))
+    return split_can_msg(msg.timestamp, "PDM_SetChannels", bin(channels))
 
 
 def parse_pdm_setdutycycle(msg: raw_can_msg):
     channel = msg.data[0] & 0xF
     duty_cycle = msg.data[1]
-    return (msg.timestamp, "PDM_SetDutyCycle", channel, duty_cycle)
+    return split_can_msg(msg.timestamp, "PDM_SetDutyCycle", [channel, duty_cycle])
 
 
 def parse_pdm_heartbeat(msg: raw_can_msg):
     channels = (
         msg.data[0] | (msg.data[1] << 8) | (msg.data[2] << 16) | (msg.data[3] << 24)
     )
-    return (msg.timestamp, "PDM_Heartbeat", bin(channels))
+    return split_can_msg(msg.timestamp, "PDM_Heartbeat", bin(channels))
 
 
 # AMS MESSAGES (Accumulator Management System)
 
 
 def parse_ams_startup(msg: raw_can_msg):
-    return (msg.timestamp, "AMS_Startup")
+    return split_can_msg(msg.timestamp, "AMS_Startup")
 
 
 def parse_ams_heartbeat(msg: raw_can_msg):
@@ -127,32 +149,34 @@ def parse_ams_heartbeat(msg: raw_can_msg):
     initialised = (msg.data[0] & 0x80) > 0
     av_voltage = ((msg.data[1] & 0x3F) << 6) | msg.data[0]
     runtime = ((msg.data[3]) << 8) | msg.data[2]
-    return (
+    return split_can_msg(
         msg.timestamp,
         "AMS_Heartbeat",
-        f"runtime: {runtime}",
-        f"voltage:{av_voltage}",
-        f"HVAn: {HVAn}, HVAp: {HVAp}, HVBn: {HVBn}, HVABp: {HVBp}, precharge: {precharge}, init: {initialised}",
+        [
+            f"runtime: {runtime}",
+            f"voltage:{av_voltage}",
+            f"HVAn: {HVAn}, HVAp: {HVAp}, HVBn: {HVBn}, HVABp: {HVBp}, precharge: {precharge}, init: {initialised}",
+        ],
     )
 
 
 def parse_ams_ready(msg: raw_can_msg):
-    return (msg.timestamp, "AMS_Ready")
+    return split_can_msg(msg.timestamp, "AMS_Ready")
 
 
 # CC MESSAGES (Chassis Controller)
 
 
 def parse_cc_rtd(msg: raw_can_msg):
-    return (msg.timestamp, "CC_RTD")
+    return split_can_msg(msg.timestamp, "CC_RTD")
 
 
 def parse_cc_fatal_shutdown(msg: raw_can_msg):
-    return (msg.timestamp, "CC_FATAL_SHUTDOWN")
+    return split_can_msg(msg.timestamp, "CC_FATAL_SHUTDOWN")
 
 
 def parse_cc_soft_shutdown(msg: raw_can_msg):
-    return (msg.timestamp, "CC_SOFT_SHUTDOWN")
+    return split_can_msg(msg.timestamp, "CC_SOFT_SHUTDOWN")
 
 
 # BMS MESSAGES (Battery Management System)
@@ -168,7 +192,7 @@ def parse_bms_transmit_voltage(msg: raw_can_msg):
         voltage = v_h | v_l
         voltages.append(voltage)
 
-    return (msg.timestamp, "BMS_TransmitVoltage", bmsID, msgID, voltages)
+    return split_can_msg(msg.timestamp, "BMS_TransmitVoltage", [bmsID, msgID, voltages])
 
 
 def parse_bms_transmit_temperature(msg: raw_can_msg):
@@ -177,7 +201,9 @@ def parse_bms_transmit_temperature(msg: raw_can_msg):
     temperatures = []
     for i in range(1, msg.data_length - 1):
         temperatures.append(msg.data[i])
-    return (msg.timestamp, "BMS_TransmitTemperature", bmsID, msgID, temperatures)
+    return split_can_msg(
+        msg.timestamp, "BMS_TransmitTemperature", [bmsID, msgID, temperatures]
+    )
 
 
 def parse_bms_bad_cell_temperature(msg: raw_can_msg):
@@ -185,13 +211,10 @@ def parse_bms_bad_cell_temperature(msg: raw_can_msg):
     cell = (msg.data[0] >> 4) & 0xF
     bms_msgid = msg.data[0] & 0xF
     temperature = msg.data[1]
-    return (
+    return split_can_msg(
         msg.timestamp,
         "BMS_BadCellTemperature",
-        bmsID,
-        bms_msgid,
-        cell,
-        temperature,
+        [bmsID, bms_msgid, cell, temperature],
     )
 
 
@@ -222,27 +245,29 @@ def parse_cc_inverter(msg: raw_can_msg):
     elif index == 0x2000:
         msgType = "MotorCommand"
 
-    return (
+    return split_can_msg(
         msg.timestamp,
         "CC_Inverter",
-        hex(nodeId),
-        bin(clientCMDSpecifier),
-        hex(index),
-        msgType,
-        variableNumber,
-        command,
+        [
+            hex(nodeId),
+            bin(clientCMDSpecifier),
+            hex(index),
+            msgType,
+            variableNumber,
+            command,
+        ],
     )
 
 
 # SHUTDOWN
 def parse_shdn_triggered(msg: raw_can_msg):
-    return (msg.timestamp, "SHDN_Triggered")
+    return split_can_msg(msg.timestamp, "SHDN_Triggered")
 
 
 def parse_shdn_heartbeat(msg: raw_can_msg):
     shdn_id = (msg.id & CAN_MASK_EXTRA) >> 4
     segmentStates = msg.data[0]
-    return (msg.timestamp, "SHDN_Heartbeat", shdn_id, bin(segmentStates))
+    return split_can_msg(msg.timestamp, "SHDN_Heartbeat", [shdn_id, bin(segmentStates)])
 
 
 # SENDYNE SENSOR (Current & Coulombs)
@@ -302,15 +327,10 @@ def parse_sendyne(msg: raw_can_msg):
             )
             data = cc
 
-    return (
+    return split_can_msg(
         msg.timestamp,
         "Sendyne",
-        id,
-        hex(request),
-        hex(register),
-        msg_type,
-        data,
-        msg.data,
+        [id, hex(request), hex(register), msg_type, data, msg.data],
     )
 
 
@@ -323,6 +343,7 @@ def parse_can_msgs(msgs):
     sendyne_readings = []
 
     parsed_msgs = []
+    # split_msgs = []
 
     print("Parsing CAN messages..")
 
@@ -397,13 +418,5 @@ def parse_can_msgs(msgs):
             parsed = None
 
         parsed_msgs.append(parsed)
-        # print(parsed)
-
-    # print("Generating data...")
-
-    # extract_bms_temps(bms_temps)
-    # extract_bms_volts(bms_voltages)
-    # extract_sendyne(sendyne_readings)
-    # extract_inverters(inverter_cmds)
 
     return parsed_msgs

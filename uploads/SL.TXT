@@ -1,6 +1,0 @@
-144:	Entering FSM Thread
-2098:	shutdown triggered 
-2099:	shutdown triggered 
-2101:	shutdown triggered 
-2103:	shutdown triggered 
-2105:	shutdown triggered 
