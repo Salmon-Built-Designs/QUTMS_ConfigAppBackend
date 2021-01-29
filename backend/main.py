@@ -21,13 +21,13 @@ async def allowed_file(filename):
 
 
 # Display upload page at root
-@app.route("/")
+@app.route("/upload")
 async def upload_file_page():
     return await render_template("upload.html")
 
 
 # Retrieve the uploaded log file
-@app.route("/", methods=["GET", "POST"])
+@app.route("/upload", methods=["GET", "POST"])
 async def upload_file():
     if request.method == "POST":
         # Check file exists
