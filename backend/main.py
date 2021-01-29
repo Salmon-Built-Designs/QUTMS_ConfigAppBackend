@@ -1,17 +1,17 @@
-from quart import Quart, request, jsonify, render_template
+from quart import Quart, request, jsonify, render_template, json
 from functools import partial, wraps
 from werkzeug.utils import secure_filename
 import os
 import quart_cors
 import datetime
 import time
-from quart import json
 from can_parser import *
 
 app = Quart(__name__)
 
 UPLOAD_FOLDER = "uploads"
-ALLOWED_EXTENSIONS = {"txt", "cc"}
+DUMP_FOLDER = "JSON_dumps"
+ALLOWED_EXTENSIONS = {"txt", "CC"}
 
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
@@ -45,6 +45,10 @@ async def upload_file():
 
             current_time = datetime.datetime.now().strftime("%d-%m-%y_%X_")
             filename = current_time + secure_filename(uploadedFile.filename)
+
+            if not os.path.exists(UPLOAD_FOLDER):
+                os.mkdir(UPLOAD_FOLDER)
+
             uploadedFile.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
 
             # Send file to the CAN parser to be processed
@@ -55,13 +59,16 @@ async def upload_file():
                 [msg.__dict__ for msg in msg_data], ensure_ascii=False, indent=4
             )
 
-            obj = open(f"JSON_dumps/{current_time}_JSON.txt", "w")
-            obj.write(msg_data_json)
-            obj.close
+            if not os.path.exists(DUMP_FOLDER):
+                os.mkdir(DUMP_FOLDER)
+
+            msg_dump = open(f"{DUMP_FOLDER}/{current_time}_JSON.txt", "w")
+            msg_dump.write(msg_data_json)
+            msg_dump.close
 
             return jsonify([msg.__dict__ for msg in msg_data])
             # return msg_data_json
 
 
-app.run()
-# app.run(host="0.0.0.0", port="5873")
+# app.run()
+app.run(host="0.0.0.0", port="5873")

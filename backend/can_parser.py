@@ -24,6 +24,7 @@ class raw_can_msg:
 
 
 # Object to contain message relevant information read to be jsonified
+# Message can be left blank if there is none
 class split_can_msg:
     def __init__(
         self,
