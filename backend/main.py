@@ -62,7 +62,7 @@ async def upload_file():
             if not os.path.exists(DUMP_FOLDER):
                 os.mkdir(DUMP_FOLDER)
 
-            msg_dump = open(f"{DUMP_FOLDER}/{current_time}_JSON.txt", "w")
+            msg_dump = open(f"{DUMP_FOLDER}/{current_time}_JSON.json", "w")
             msg_dump.write(msg_data_json)
             msg_dump.close
 
