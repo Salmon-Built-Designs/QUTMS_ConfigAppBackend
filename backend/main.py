@@ -6,6 +6,7 @@ from quart_cors import cors
 import datetime
 import time
 from can_parser import *
+import re  # only need this if you are on Windows (Darwin / mac doesnt need this)
 
 app = Quart(__name__)
 
@@ -28,6 +29,20 @@ async def upload_file_page():
     return await render_template("upload.html")
 
 
+def sanitize_windows(filename: str) -> str:
+    return (
+        filename.replace(":", "")
+        .replace("?", "")
+        .replace("/", "")
+        .replace("\\", "")
+        .replace("|", "")
+        .replace('"', "")
+        .replace("<", "")
+        .replace(">", "")
+        .replace("*", "")
+    )
+
+
 # Retrieve the uploaded log file
 @app.route("/upload", methods=["GET", "POST"])
 async def upload_file():
@@ -47,10 +62,13 @@ async def upload_file():
 
             current_time = datetime.datetime.now().strftime("%d-%m-%y_%X_")
             filename = current_time + secure_filename(uploadedFile.filename)
+            # the lines below are only needed if you are on Windows
+            filename = sanitize_windows(filename)
 
             if not os.path.exists(UPLOAD_FOLDER):
                 os.mkdir(UPLOAD_FOLDER)
 
+            print(filename)
             uploadedFile.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
 
             # Send file to the CAN parser to be processed
@@ -64,7 +82,9 @@ async def upload_file():
             if not os.path.exists(DUMP_FOLDER):
                 os.mkdir(DUMP_FOLDER)
 
-            msg_dump = open(f"{DUMP_FOLDER}/{current_time}_JSON.json", "w")
+            msg_dump = open(
+                sanitize_windows(f"{DUMP_FOLDER}/{current_time}_JSON.json"), "w"
+            )
             msg_dump.write(msg_data_json)
             msg_dump.close
 

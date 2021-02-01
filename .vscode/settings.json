@@ -10,6 +10,6 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "python.linting.enabled": true,
-  "python.pythonPath": "/opt/anaconda3/envs/config-hub-env/bin/python",
+  "python.pythonPath": "C:\\Users\\Filip Juricev\\.conda\\envs\\config-hub-env\\python.exe",
   "typescript.tsdk": "node_modules\\typescript\\lib"
 }
