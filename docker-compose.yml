@@ -9,8 +9,7 @@ services:
     tty: true        # docker run -t
     #links:
     depends_on:
-      - confighubbackend
-
+      - chbe
     expose:
       - "3000"
     ports:
