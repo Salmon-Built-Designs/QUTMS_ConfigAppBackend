@@ -10,6 +10,6 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "python.linting.enabled": true,
-  "python.pythonPath": "/Users/andrew/Documents/QUT Motorsports/QUTMS_ConfigApp/env/bin/python",
+  "python.pythonPath": "/opt/anaconda3/envs/config-hub-env/bin/python",
   "typescript.tsdk": "node_modules\\typescript\\lib"
 }
