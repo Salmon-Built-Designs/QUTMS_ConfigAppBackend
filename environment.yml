@@ -15,12 +15,12 @@ dependencies:
   #- pyserial==3.4 #serial port access library
   #- pyinstaller==4.0 #bundles a Python application and all its dependencies into a single package.
   - quart==0.10.0 #Python backend web framework
-  #- numpy==1.19.2 #Array processing for numbers, strings, records, and objects.
+  - numpy==1.19.2 #Array processing for numbers, strings, records, and objects.
   - h2==3.2.0
   - pylint==2.6.0 # for linting when you code
   - black==20.8b1 # for autoformatting (when you save)
   - quart-cors==0.2.0 #Enables Cross Origin Resource Sharing addon for Quart
-  - Werkzeug==1.0.1
+  - werkzeug==1.0.1
   # - mysql-connector-python
   # - python-dotenv==0.14.0 #Get and set values in your .env file in local and production servers
   #- websockets==8.1

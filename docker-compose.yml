@@ -7,7 +7,9 @@ services:
     container_name: confighubfrontend
     stdin_open: true # docker run -i
     tty: true        # docker run -t
-    links:
+    #links:
+    depends_on:
+      - confighubbackend
 
     expose:
       - "3000"
@@ -18,7 +20,10 @@ services:
     container_name: confighubbackend
     environment:
       - DEBUG=True
-    links:
+
+    expose:
+      - 5873
+    #links:
 
     ports: 
       - "5873:5873"
