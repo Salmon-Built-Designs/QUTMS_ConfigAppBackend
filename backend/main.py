@@ -2,7 +2,7 @@ from quart import Quart, request, jsonify, render_template, json
 from functools import partial, wraps
 from werkzeug.utils import secure_filename
 import os
-import quart_cors
+from quart_cors import cors
 import datetime
 import time
 from can_parser import *
@@ -14,6 +14,8 @@ DUMP_FOLDER = "JSON_dumps"
 ALLOWED_EXTENSIONS = {"txt", "CC"}
 
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
+app = cors(app, allow_origin="*")
 
 
 async def allowed_file(filename):
