@@ -1,26 +1,35 @@
-name: config-hub-env
+name: cfback
 
 channels:
   - defaults
   - conda-forge
+  - anaconda
 
 #https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#updating-an-environment
 
 dependencies:
   #All versions as of 28th October 2020
   #- plotly==4.12.0 #browser-based graphing library
-  # - pip==20.2.4 #tool for installing Python packages
+  - pip==20.2.4 #tool for installing Python packages
   #- nodejs==14.14.0 #platform for easily building fast, scalable network applications
   - httptools==0.1.1 #Fast HTTP parser
   #- pyserial==3.4 #serial port access library
   #- pyinstaller==4.0 #bundles a Python application and all its dependencies into a single package.
-  - quart==0.10.0 #Python backend web framework
+  #- quart==0.10.0 #Python backend web framework
   - numpy==1.19.2 #Array processing for numbers, strings, records, and objects.
   - h2==3.2.0
   - pylint==2.6.0 # for linting when you code
   - black==20.8b1 # for autoformatting (when you save)
-  - quart-cors==0.2.0 #Enables Cross Origin Resource Sharing addon for Quart
+  #- quart-cors==0.2.0 #Enables Cross Origin Resource Sharing addon for Quart
   - werkzeug==1.0.1
+  - flask
+  - flask-sqlalchemy
+  - flask-login
+  - flask-wtf
+  - flask-migrate==2.4.0
+  - flask-cors
+  - pip: 
+    - flask-praetorian
   # - mysql-connector-python
   # - python-dotenv==0.14.0 #Get and set values in your .env file in local and production servers
   #- websockets==8.1
