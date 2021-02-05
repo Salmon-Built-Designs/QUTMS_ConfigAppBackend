@@ -1,7 +1,9 @@
-from backend import app, db, DUMP_FOLDER, UPLOAD_FOLDER, ALLOWED_EXTENSIONS
+from backend import app, db, guard, DUMP_FOLDER, UPLOAD_FOLDER, ALLOWED_EXTENSIONS
 from flask import request, abort, jsonify
 from backend.can_parser import *
 from werkzeug.utils import secure_filename
+import flask_praetorian
+from flask_sqlalchemy import SQLAlchemy
 import datetime
 import os
 
@@ -79,3 +81,25 @@ def upload_file():
         else:
             print("Bad file.")
             abort(400, description="Bad file name.")
+
+@app.route('/login', methods=['POST'])
+def login():
+    req = request.get_json(force=True)
+    username = req.get('username', None)
+    password = req.get('password', None)
+    user = guard.authenticate(username,password)
+    ret = {'access_token': guard.encode_jwt_token(user)}
+    return ret, 200
+
+@app.route('/refresh', methods=['POST'])
+def refresh():
+    print("refresh request")
+    old_token = request.get_data()
+    new_token = guard.refresh_jwt_token(old_token)
+    ret = {'access_token': new_token}
+    return ret, 200
+
+@app.route('/protected')
+@flask_praetorian.auth_required
+def protected():
+    return f'protected endpoint (allowed user {flask_praetorian.current_user().username})'
