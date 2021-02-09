@@ -28,7 +28,7 @@ FROM debian:buster AS runtime
 COPY --from=build /venv /venv
 
 # Create an app folder and copy the contents of src into it
-WORKDIR /app
+#WORKDIR /app
 COPY src .
 
 EXPOSE 5873
@@ -37,5 +37,5 @@ EXPOSE 5873
 # activated:
 SHELL ["/bin/bash", "-c"]
 ENTRYPOINT source /venv/bin/activate && \
-            python main.py
+            flask run
 
