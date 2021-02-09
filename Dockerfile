@@ -31,10 +31,11 @@ COPY --from=build /venv /venv
 WORKDIR /app
 COPY src .
 
+EXPOSE 5873
+
 # When image is run, run the code with the environment
 # activated:
 SHELL ["/bin/bash", "-c"]
 ENTRYPOINT source /venv/bin/activate && \
             python main.py
 
-EXPOSE 5873

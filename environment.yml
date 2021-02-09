@@ -22,14 +22,25 @@ dependencies:
   - black==20.8b1 # for autoformatting (when you save)
   #- quart-cors==0.2.0 #Enables Cross Origin Resource Sharing addon for Quart
   - werkzeug==1.0.1
-  - flask
-  - flask-sqlalchemy
-  - flask-login
-  - flask-wtf
+  - flask==1.1.2
+  - flask-sqlalchemy==2.4.4
+  - flask-login==0.5.0
+  - flask-wtf==0.14.3
   - flask-migrate==2.4.0
-  - flask-cors
+  - flask-cors==3.0.9
   - pip: 
-    - flask-praetorian
+    - flask-praetorian==1.1.0
+    - psycopg2-binary==2.8.4
   # - mysql-connector-python
   # - python-dotenv==0.14.0 #Get and set values in your .env file in local and production servers
   #- websockets==8.1
+
+# Environment must be recreated for variables to be set. Updating doesn't work
+variables:
+  FLASK_APP: src/main.py
+  FLASK_ENV: development
+  FLASK_RUN_PORT: 5873
+  DATABASE_URL: postgresql://admin:admin@db:5432/cfhub_db
+  SQL_HOST: db
+  SQL_PORT: 5432
+  DATABASE: postgres

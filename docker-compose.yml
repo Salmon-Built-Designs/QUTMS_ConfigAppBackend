@@ -18,11 +18,23 @@ services:
     image: qutmotorsport/configapp-backend
     container_name: confighubbackend
     environment:
-      - DEBUG=True
+      - FLASK_RUN_PORT=5873
 
     expose:
       - 5873
     #links:
-
+    depends_on:
+      - db
     ports: 
       - "5873:5873"
+  db:
+    image: postgres:12-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=cfhub_db
+
+volumes:
+  postgres_data:

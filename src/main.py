@@ -1,17 +1,19 @@
+from flask.cli import FlaskGroup
 from backend import app, db, guard, models
 from backend.models import User
 
-# with app.app_context():
-#     db.create_all()
-#     if db.session.query(User).filter_by(username='Yasoob').count() < 1:
-#         db.session.add(User(
-#             username='Yasoob',
-#             password=guard.hash_password('strongpassword'),
-#             roles='admin'
-#         ))
-#     db.session.commit()
 
-app.run(host="0.0.0.0", port="5873")
+cli = FlaskGroup(app)
 
-# curl localhost:5873/pull -d '{"start_time": 500},{"end_time": 1000}' -H 'Content-Type: application/json'
+@cli.command("create_db")
+def create_db():
+    db.drop_all()
+    db.create_all()
+    db.session.commit()
+
+if __name__ == "__main__":
+    cli()
+
+#app.run(host="0.0.0.0", port="5873")
+
 # curl localhost:5873/pull -d '{"start_time": 500, "end_time": 1000}' -H 'Content-Type: application/json'

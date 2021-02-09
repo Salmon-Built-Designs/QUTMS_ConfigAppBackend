@@ -140,14 +140,14 @@ def save_file():
             elif key == "date_recorded":
                 input_date_recorded = value
 
-        with app.app_context():
-            db.session.add(Log(
-                title=input_name,
-                driver=input_driver,
-                location=input_location,
-                date_recorded=input_date_recorded,
-            ))
-            db.session.commit()
+        # with app.app_context():
+        #     db.session.add(Log(
+        #         title=input_name,
+        #         driver=input_driver,
+        #         location=input_location,
+        #         date_recorded=input_date_recorded,
+        #     ))
+        #     db.session.commit()
 
 
 @app.route('/login', methods=['POST'])
