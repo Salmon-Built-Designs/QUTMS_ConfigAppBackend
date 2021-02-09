@@ -1,6 +1,6 @@
-from numpy.core.shape_base import block
 from flask import jsonify, json
 import os
+import uuid
 
 # Helper function to compose the CAN ID by concatenating
 def Compose_CANId(priority, sourceId, autonomous, type, extra, BMSId):
@@ -102,9 +102,31 @@ class split_can_msg:
         self.msg_type = msg_type
         self.message = message
 
+    # @property
+    # def time(self):
+    #     return self.timestamp
+
     def __str__(self):
         return f"[{self.timestamp}ms]:" + self.msg_type + " | " + str(self.message)
 
+# Receive list of messages and split into packets
+class log_container:
+    def __init__(self,split_can_msgs):
+        new_id = uuid.uuid1()
+        self.container_id = new_id.int
+        self.msgs = split_can_msgs
+        self.start_time = self.msgs[0].timestamp
+        self.end_time = self.msgs[-1].timestamp
+    
+    def request_msgs(self, type, start_time, end_time):
+        requested_msgs = [ msg for msg in self.msgs if (msg.timestamp >= start_time and  msg.timestamp <= end_time)]
+
+        if type == None:
+            return requested_msgs
+        else:
+            raise Exception("Sorry, type filtering still needs to be implemented.")
+
+            
 
 def process_file(path):
     if not os.path.exists(path):

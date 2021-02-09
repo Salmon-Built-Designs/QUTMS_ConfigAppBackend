@@ -1,4 +1,5 @@
-from datetime import datetime
+import datetime
+from sqlalchemy import DateTime
 from backend import db
 
 # Ignore column member errors
@@ -38,9 +39,12 @@ class User(db.Model):
 
 class Log(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    file_name = db.Column(db.String(140))
+    title = db.Column(db.String(140))
+    date_recorded = db.Column(db.String(140))
+    location = db.Column(db.String(140))
+    created_date = db.Column(DateTime, default=datetime.datetime.utcnow)
     driver = db.Column(db.String(140))
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    #user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     def __repr(self):
         return '<Log {}>'.format(self.file_name)

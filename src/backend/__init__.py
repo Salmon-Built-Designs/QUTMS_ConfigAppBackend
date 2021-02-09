@@ -40,6 +40,7 @@ db.init_app(app)
 # Does running init erase previous db?
 #db.init_app(app)
 
+# Create container for log data
+log_cache = []
 
 from backend import routes, models
-#

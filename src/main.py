@@ -12,3 +12,6 @@ from backend.models import User
 #     db.session.commit()
 
 app.run(host="0.0.0.0", port="5873")
+
+# curl localhost:5873/pull -d '{"start_time": 500},{"end_time": 1000}' -H 'Content-Type: application/json'
+# curl localhost:5873/pull -d '{"start_time": 500, "end_time": 1000}' -H 'Content-Type: application/json'
