@@ -67,9 +67,42 @@ PDM_TransmitDutyCycle_ID		= Compose_CANId(CAN_PRIORITY_NORMAL, CAN_SRC_ID_PDM, D
 SHDN_Triggered_ID               = Compose_CANId(CAN_PRIORITY_ERROR, CAN_SRC_ID_SHDN, DRIVER, CAN_TYPE_ERROR, 0x00, 0x00)
 SHDN_Heartbeat_ID               = Compose_CANId(CAN_PRIORITY_HEARTBEAT, CAN_SRC_ID_SHDN, DRIVER, CAN_TYPE_HEARTBEAT, 0x00, 0x00)
 
+id_list = [
+    "AMS_CellVoltageShutdown",
+    "AMS_CellTemperatureShutdown",
+    "AMS_MissingBMS",
+    "AMS_HeartbeatRequest",
+    "AMS_HeartbeatResponse",
+    "AMS_StartUp",
+    "AMS_ResetTractive",
+    "AMS_Shutdown",
+    "AMS_RequestTemperature",
+    "AMS_TransmitTemperature",
+    "AMS_RequestChargeState" ,
+    "AMS_TransmitChargeState" ,
+    "AMS_Ready" ,
+    "BMS_BadCellVoltage" ,
+    "BMS_BadCellTemperature" ,
+    "BMS_TransmitVoltage" ,
+    "BMS_TransmitTemperature" ,
+    "BMS_ChargeEnabled" ,
+    "CC_ReadyToDrive" ,
+    "CC_FatalShutdown" ,
+    "CC_SoftShutdown" ,
+    "PDM_InitiateStartup" ,
+    "PDM_StartupOk" ,
+    "PDM_SelectStartup" ,
+    "PDM_SetChannelStates" ,
+    "PDM_Heartbeat" ,
+    "PDM_RequestDutyCycle" ,
+    "PDM_SetDutyCycle" ,
+    "PDM_TransmitDutyCycle" ,
+    "SHDN_Triggered" ,
+    "SHDN_Heartbeat" 
+]
+
+
 # Object to contain all raw message information
-
-
 class raw_can_msg:
     def __init__(
         self,
@@ -118,13 +151,16 @@ class log_container:
         self.start_time = self.msgs[0].timestamp
         self.end_time = self.msgs[-1].timestamp
     
-    def request_msgs(self, type, start_time, end_time):
+    def request_msgs(self, req_type, start_time, end_time):
+        # Filter to time range
         requested_msgs = [ msg for msg in self.msgs if (msg.timestamp >= start_time and  msg.timestamp <= end_time)]
 
         if type == None:
             return requested_msgs
         else:
-            raise Exception("Sorry, type filtering still needs to be implemented.")
+            # Filter to msg type
+            requested_msgs = [ msg for msg in requested_msgs if (msg.msg_type in req_type)]
+            return requested_msgs
 
             
 

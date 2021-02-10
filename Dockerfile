@@ -37,5 +37,5 @@ EXPOSE 5873
 # activated:
 SHELL ["/bin/bash", "-c"]
 ENTRYPOINT source /venv/bin/activate && \
-            python main.py
+            flask run
 
