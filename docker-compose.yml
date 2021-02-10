@@ -3,7 +3,7 @@ version: '3'
 services:
   #Setting up my repository
   chfe:
-    image: qutmotorsport/configapp-frontend
+    image: frontend:dev
     container_name: confighubfrontend
     stdin_open: true # docker run -i
     tty: true        # docker run -t
@@ -15,7 +15,7 @@ services:
     ports:
       - "3000:3000"
   chbe:
-    image: qutmotorsport/configapp-backend
+    image: backend:dev
     container_name: confighubbackend
     environment:
       - FLASK_RUN_PORT=5873
