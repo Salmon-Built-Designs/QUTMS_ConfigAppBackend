@@ -28,6 +28,7 @@ dependencies:
   - flask-wtf==0.14.3
   - flask-migrate==2.4.0
   - flask-cors==3.0.9
+  #- gunicorn
   - pip: 
     - flask-praetorian==1.1.0
     - psycopg2-binary==2.8.4
@@ -36,9 +37,11 @@ dependencies:
   #- websockets==8.1
 
 # Environment must be recreated for variables to be set. Updating doesn't work
+# The docker cache must also be cleared to make room for the new environment
 variables:
   FLASK_APP: src/main.py
   FLASK_ENV: development
+  HOST: http://0.0.0.0
   FLASK_RUN_PORT: 5873
   DATABASE_URL: postgresql://admin:admin@db:5432/cfhub_db
   SQL_HOST: db
