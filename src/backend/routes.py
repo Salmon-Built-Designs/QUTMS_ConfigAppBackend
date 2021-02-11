@@ -102,23 +102,32 @@ def upload_file():
 @app.route('/pull', methods=["GET", "POST"])
 def pull_data():
     if request.method == "POST":
-        request_info = request.get_json()
+        try:
+            request_info = request.get_json()
 
-        pairs = request_info.items()
-        
-        start_time = 0
-        end_time = 0
-        msg_type = []
+            pairs = request_info.items()
 
-        for key, value in pairs:
-            if key == "start_time":
-                start_time = int(value)
-            elif key == "end_time":
-                end_time = int(value) 
-            elif key == "type":
-                msg_type = value
+            start_time = 0
+            end_time = 0
+            msg_type = []
 
-        msg_range = log_cache.request_msgs(msg_type, start_time, end_time)
+            for key, value in pairs:
+                if key == "start_time":
+                    start_time = int(value)
+                elif key == "end_time":
+                    end_time = int(value) 
+                elif key == "type":
+                    msg_type = value
+
+            if start_time == None | start_time < 0:
+                start_time = 0
+
+            msg_range = log_cache.request_msgs(msg_type, start_time, end_time)
+            
+        except Exception as e:
+                print("Failed to get filtered data. Check json request format.")
+                print(e)
+                abort(400, description="Bad request.")
 
     return jsonify([msg.__dict__ for msg in msg_range])
 

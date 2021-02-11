@@ -252,7 +252,7 @@ def parse_pdm_setchannels(msg: raw_can_msg):
 def parse_pdm_setdutycycle(msg: raw_can_msg):
     channel = msg.data[0] & 0xF
     duty_cycle = msg.data[1]
-    return split_can_msg(msg.timestamp, "PDM_SetDutyCycle", [channel, duty_cycle])
+    return split_can_msg(msg.timestamp, "PDM_SetDutyCycle", ["CHANNEL: ", channel,"DUTY_CYCLE: ", duty_cycle])
 
 
 def parse_pdm_heartbeat(msg: raw_can_msg):
@@ -283,8 +283,8 @@ def parse_ams_heartbeat(msg: raw_can_msg):
         msg.timestamp,
         "AMS_Heartbeat",
         [
-            f"runtime: {runtime}",
-            f"voltage:{av_voltage}",
+            f"runtime: {runtime} ",
+            f"voltage:{av_voltage} ",
             f"HVAn: {HVAn}, HVAp: {HVAp}, HVBn: {HVBn}, HVABp: {HVBp}, precharge: {precharge}, init: {initialised}",
         ],
     )
@@ -321,8 +321,11 @@ def parse_bms_transmit_voltage(msg: raw_can_msg):
         v_l = int(msg.data[2 * i]) & 0x3F
         voltage = v_h | v_l
         voltages.append(voltage)
+    
+    str_voltages = [str(int) for int in voltages]
+    str_voltages = ", ".join(str_voltages)
 
-    return split_can_msg(msg.timestamp, "BMS_TransmitVoltage", [bmsID, msgID, voltages])
+    return split_can_msg(msg.timestamp, "BMS_TransmitVoltage", ["ID: ", bmsID, " ","MSG_ID: " , msgID, " VOLT: ", str_voltages])
 
 
 def parse_bms_transmit_temperature(msg: raw_can_msg):
@@ -331,20 +334,25 @@ def parse_bms_transmit_temperature(msg: raw_can_msg):
     temperatures = []
     for i in range(1, msg.data_length - 1):
         temperatures.append(msg.data[i])
+
+    str_temps = [str(int) for int in temperatures]
+    str_temps = ", ".join(str_temps)
+
     return split_can_msg(
-        msg.timestamp, "BMS_TransmitTemperature", [bmsID, msgID, temperatures]
+        msg.timestamp, "BMS_TransmitTemperature", ["BMSID: ", bmsID,"MSGID: ", msgID,"TEMPS: ", str_temps]
     )
 
 
 def parse_bms_bad_cell_temperature(msg: raw_can_msg):
     bmsID = msg.id & 0xF
     cell = (msg.data[0] >> 4) & 0xF
-    bms_msgid = msg.data[0] & 0xF
-    temperature = msg.data[1]
+    msgID = msg.data[0] & 0xF
+    temperature = msg.data[1]   
+
     return split_can_msg(
         msg.timestamp,
         "BMS_BadCellTemperature",
-        [bmsID, bms_msgid, cell, temperature],
+        ["BMSID: ", bmsID,"MSGID: ", msgID,"CELL: ", cell,"TEMP: ", temperature],
     )
 
 
@@ -549,5 +557,6 @@ def parse_can_msgs(msgs):
             parsed = None
 
         parsed_msgs.append(parsed)
+        #print(len(parsed))
 
     return parsed_msgs
