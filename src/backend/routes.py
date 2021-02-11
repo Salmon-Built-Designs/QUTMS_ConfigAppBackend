@@ -105,16 +105,16 @@ def pull_data():
         request_info = request.get_json()
 
         pairs = request_info.items()
-
+        
         start_time = 0
         end_time = 0
-        msg_type = None
+        msg_type = []
 
         for key, value in pairs:
             if key == "start_time":
-                start_time = value
+                start_time = int(value)
             elif key == "end_time":
-                end_time = value
+                end_time = int(value) 
             elif key == "type":
                 msg_type = value
 

@@ -43,4 +43,11 @@ db.init_app(app)
 # Create container for log data
 log_cache = []
 
+def create_db():
+    db.drop_all()
+    db.create_all()
+    db.session.commit()
+
+#create_db()
+
 from backend import routes, models

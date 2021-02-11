@@ -3,10 +3,10 @@ version: '3'
 services:
   #Setting up my repository
   chfe:
-    image: frontend:dev
+    image: frontend:staging
     container_name: confighubfrontend
-    stdin_open: true # docker run -i
-    tty: true        # docker run -t
+    #stdin_open: true # docker run -i
+    #tty: true        # docker run -t
     #links:
     depends_on:
       - chbe
@@ -16,7 +16,12 @@ services:
       - "3000:3000"
   chbe:
     image: backend:dev
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: confighubbackend
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
     environment:
       - FLASK_RUN_PORT=5873
 
