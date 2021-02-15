@@ -24,6 +24,8 @@ services:
     tty: true        # docker run -t
     environment:
       - FLASK_RUN_PORT=5873
+    volumes:
+      - log_storage:/logs
 
     expose:
       - 5873
@@ -43,3 +45,4 @@ services:
 
 volumes:
   postgres_data:
+  log_storage:

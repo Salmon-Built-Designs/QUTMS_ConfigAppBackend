@@ -28,6 +28,7 @@ dependencies:
   - flask-wtf==0.14.3
   - flask-migrate==2.4.0
   - flask-cors==3.0.9
+  - pandas
   - pip: 
     - flask-praetorian==1.1.0
     - psycopg2-binary==2.8.4

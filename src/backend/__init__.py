@@ -41,7 +41,7 @@ db.init_app(app)
 #db.init_app(app)
 
 # Create container for log data
-log_cache = []
+global log_cache
 
 def create_db():
     db.drop_all()

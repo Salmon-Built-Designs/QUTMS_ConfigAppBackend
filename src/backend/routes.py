@@ -8,6 +8,7 @@ from backend.models import User, Log
 import datetime
 import os
 import json
+import traceback
 
 # This file details all the routing to the front end including http requests, uploads, logins, etc
 
@@ -67,32 +68,18 @@ def upload_file():
 
             # Send file to the CAN parser to be processed
             try:
-
                 msg_data = process_file(os.path.join(
                     app.config["UPLOAD_FOLDER"], filename))
 
-                global log_cache
-                log_cache = log_container(msg_data)
+                # Create new log container and store in memory (override previous)
+                new_log = log_container(msg_data)
+                log_cache = new_log
 
-                # Convert the message list to JSON
-                msg_data_json = json.dumps(
-                    [msg.__dict__ for msg in msg_data], ensure_ascii=False, indent=4
-                )
-
-                if not os.path.exists(DUMP_FOLDER):
-                    os.mkdir(DUMP_FOLDER)
-
-                msg_dump = open(
-                    f"{DUMP_FOLDER}/" +
-                        sanitize_windows(f"{current_time}_JSON.json"), "w"
-                )
-                msg_dump.write(msg_data_json)
-                msg_dump.close
-
-                return jsonify([msg.__dict__ for msg in msg_data])
+                return {"id":new_log.id}
             except Exception as e:
                 print("File processing failed. See exception:")
                 print(e)
+                print(traceback.format_exc())
                 abort(400, description="Bad file format.")
         else:
             print("Bad file.")
@@ -104,60 +91,37 @@ def pull_data():
     if request.method == "POST":
         try:
             request_info = request.get_json()
-
-            pairs = request_info.items()
-
-            start_time = 0
-            end_time = 0
+            request_info = request_info.items()
             msg_type = []
 
-            for key, value in pairs:
-                if key == "start_time":
-                    start_time = int(value)
-                elif key == "end_time":
-                    end_time = int(value) 
-                elif key == "type":
+            for key, value in request_info:
+                if key == "type":
                     msg_type = value
 
-            if start_time == None | start_time < 0:
-                start_time = 0
-
-            msg_range = log_cache.request_msgs(msg_type, start_time, end_time)
+            msg_range = log_cache.request_msgs(msg_type)
             
         except Exception as e:
                 print("Failed to get filtered data. Check json request format.")
                 print(e)
+                print(traceback.format_exc())
                 abort(400, description="Bad request.")
 
     return jsonify([msg.__dict__ for msg in msg_range])
 
-# Receive info data from user and save log info in the database
-@app.route('/save', methods=["GET", "POST"])
-def save_file():
+# Return current session ID
+@app.route('/session')
+def current_session():
     if request.method == "POST":
-        request_info = request.get_json()
+        return {"id":log_cache.id}
 
-        pairs = request_info.items()
+# Get list of available sessions/log IDs
+@app.route('/history')
+def get_sessions():
+    raise Exception("Still need to implement history")
+    return {"id":log_cache.id}
 
-        for key, value in pairs:
-            if key == "file_name":
-                input_name = value
-            elif key == "driver":
-                input_driver = value
-            elif key == "location":
-                input_location = value
-            elif key == "date_recorded":
-                input_date_recorded = value
-
-        # with app.app_context():
-        #     db.session.add(Log(
-        #         title=input_name,
-        #         driver=input_driver,
-        #         location=input_location,
-        #         date_recorded=input_date_recorded,
-        #     ))
-        #     db.session.commit()
-
+# Set new session for given ID
+@app.route('/', methods=["GET", "POST"])
 
 @app.route('/login', methods=['POST'])
 def login():
