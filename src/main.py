@@ -9,4 +9,4 @@ from backend.models import User
 # This is not needed because the backend is started with 'flask run'
 app.run(host="0.0.0.0", port="5873")
 
-# curl localhost:5873/pull -d '{"start_time": 500, "end_time": 1000}' -H 'Content-Type: application/json'cd
+# curl 0.0.0.0:5873/pull -d '{"type": "PDM_Heartbeat"}' -H 'Content-Type: application/json'

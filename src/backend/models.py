@@ -39,10 +39,10 @@ class User(db.Model):
 
 class Log(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(140))
+    description = db.Column(db.String(140))
     date_recorded = db.Column(db.String(140))
     location = db.Column(db.String(140))
-    created_date = db.Column(DateTime, default=datetime.datetime.utcnow)
+    date_created = db.Column(DateTime, default=datetime.datetime.utcnow)
     driver = db.Column(db.String(140))
     #user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 

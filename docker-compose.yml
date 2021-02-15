@@ -25,7 +25,7 @@ services:
     environment:
       - FLASK_RUN_PORT=5873
     volumes:
-      - log_storage:/logs
+      - log_storage:/var/lib/docker/volumes/qutms_configappbackend_log_storage/
 
     expose:
       - 5873

@@ -68,14 +68,13 @@ def upload_file():
 
             # Send file to the CAN parser to be processed
             try:
-                msg_data = process_file(os.path.join(
+                # Create new log container and store in memory (override previous)
+                global log_cache
+                log_cache = process_file(os.path.join(
                     app.config["UPLOAD_FOLDER"], filename))
 
-                # Create new log container and store in memory (override previous)
-                new_log = log_container(msg_data)
-                log_cache = new_log
+                return {"id":log_cache.id}
 
-                return {"id":new_log.id}
             except Exception as e:
                 print("File processing failed. See exception:")
                 print(e)
@@ -90,13 +89,13 @@ def upload_file():
 def pull_data():
     if request.method == "POST":
         try:
-            request_info = request.get_json()
-            request_info = request_info.items()
+            request_post = request.get_json()
+            request_info = request_post.items()
             msg_type = []
 
             for key, value in request_info:
                 if key == "type":
-                    msg_type = value
+                    msg_type.append(value)
 
             msg_range = log_cache.request_msgs(msg_type)
             
@@ -111,17 +110,37 @@ def pull_data():
 # Return current session ID
 @app.route('/session')
 def current_session():
-    if request.method == "POST":
         return {"id":log_cache.id}
 
 # Get list of available sessions/log IDs
 @app.route('/history')
 def get_sessions():
-    raise Exception("Still need to implement history")
-    return {"id":log_cache.id}
+
+    class found_log(object):
+        def __init__(self, id, description, driver, location, date_created, date_recorded):
+            self.id = id
+            self.driver = driver
+            self.description = description
+            self.driver = driver
+            self.location = location
+            self.date_created = str(date_created)
+            self.date_recorded = date_recorded
+
+    query = Log.query.all()
+
+    found_logs = []
+
+    for row in query:
+        found_logs.append(found_log(row.id, row.description, row.driver, row.location, row.date_created, row.date_recorded))
+
+    return json.dumps([log.__dict__ for log in found_logs])
 
 # Set new session for given ID
-@app.route('/', methods=["GET", "POST"])
+@app.route('/new-session', methods=["GET", "POST"])
+def new_session():
+    raise Exception("Still need to implement new session")
+    return {"id":log_cache.id}   
+
 
 @app.route('/login', methods=['POST'])
 def login():

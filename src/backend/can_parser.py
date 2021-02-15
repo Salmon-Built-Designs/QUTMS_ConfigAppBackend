@@ -57,14 +57,14 @@ def process_file(path):
     print(len(raw_msgs), "data entries found.")
 
     # Parse messages to create readable information
-    # Add raw messages
-    parsed_msgs = parse_can_msgs(raw_msgs)
-    new_log = log_container(parsed_msgs)
+    # Create new log container with messages
+    new_log = log_container(parse_can_msgs(raw_msgs))
 
     # Isolate voltages
     new_log.bms_voltages = compile_voltages(raw_msgs)
 
     # Isolate temperatures
+    
 
     #Save
     new_log.save()
@@ -72,7 +72,7 @@ def process_file(path):
     print("All messages parsed")
 
     # Return list of message object ready to be turned into JSON
-    return parsed_msgs
+    return new_log
     
 
 

@@ -33,6 +33,7 @@ dependencies:
     - flask-praetorian==1.1.0
     - psycopg2-binary==2.8.4
     - gunicorn
+    - sqlathanor
   # - mysql-connector-python
   # - python-dotenv==0.14.0 #Get and set values in your .env file in local and production servers
   #- websockets==8.1
