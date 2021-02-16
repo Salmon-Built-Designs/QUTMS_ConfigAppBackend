@@ -42,12 +42,12 @@ db.init_app(app)
 global log_cache
 log_cache = None
 
-# def create_db():
-#     with app.app_context():
-#         db.drop_all()
-#         db.create_all()
-#         db.session.commit()
+def create_db():
+    with app.app_context():
+        db.drop_all()
+        db.create_all()
+        db.session.commit()
 
-# create_db()
+create_db()
 
 from backend import routes, models

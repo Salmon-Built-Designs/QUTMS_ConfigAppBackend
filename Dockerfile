@@ -15,4 +15,5 @@ SHELL ["conda", "run", "-n", "cfback", "/bin/bash", "-c"]
 # The code to run when container is started:
 COPY . .
 ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "cfback", "flask", "run","--host=0.0.0.0"]
+#ENTRYPOINT ["./entrypoint.sh"]
 #ENTRYPOINT ["flask", "run"]

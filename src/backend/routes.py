@@ -119,7 +119,6 @@ def get_sessions():
     class found_log(object):
         def __init__(self, id, description, driver, location, date_created, date_recorded):
             self.id = id
-            self.driver = driver
             self.description = description
             self.driver = driver
             self.location = location
@@ -127,7 +126,6 @@ def get_sessions():
             self.date_recorded = date_recorded
 
     query = Log.query.all()
-
     found_logs = []
 
     for row in query:

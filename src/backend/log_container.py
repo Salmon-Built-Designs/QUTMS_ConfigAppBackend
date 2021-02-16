@@ -21,6 +21,7 @@ class log_container:
         self.ams_runtime = None
         self.sendyne_coulombs = None
         self.sendyne_current = None
+        self.metadata = None
     
     def request_msgs(self, req_type):
         requested_msgs = self.msgs
@@ -34,16 +35,18 @@ class log_container:
 
     def save(self):
         #DUMP_FOLDER = 'export'
-        DOCKER_VOLUME = "/var/lib/docker/volumes/qutms_configappbackend_log_storage/"
+        SAVE_VOLUME = os.environ.get('SAVE_VOLUME')
+        
+        file_path = fr'{SAVE_VOLUME}/{self.__id}/'
 
-        if not os.path.exists(f'{DOCKER_VOLUME}/{str(self.id)}'):
-            os.mkdir(f'{DOCKER_VOLUME}/{str(self.id)}')
+        if not os.path.exists(file_path):
+            os.mkdir(file_path)
 
         # Save msgs
+        self.msgs.to_csv(file_path + fr'rawMsgs.csv', header=True)
 
-        for i in range(len(self.bms_voltages)):
-            file_path = fr'{DOCKER_VOLUME}/{self.__id}/BMSvoltages_{i}.csv'
-            self.bms_voltages[i].to_csv(file_path, header=True)
+        for i in range(len(self.bms_voltages)): 
+            self.bms_voltages[i].to_csv(file_path + fr'BMSvoltages_{i}.csv', header=True)
 
     def __save_db(self):
         new_db_log = Log(driver='Lando', location='Brisbane', date_recorded=1234, description='driving around yeah')

@@ -20,10 +20,12 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: confighubbackend
+    #entrypoint: app/src/entrypoint.sh
     stdin_open: true # docker run -i
     tty: true        # docker run -t
-    environment:
-      - FLASK_RUN_PORT=5873
+    environment: # Needed to override some environment variables so that the backend uses docker volumes
+      - DATABASE_URL=postgresql://admin:admin@db:5432/cfhub_db
+      - SAVE_VOLUME=/var/lib/docker/volumes/qutms_configappbackend_log_storage/
     volumes:
       - log_storage:/var/lib/docker/volumes/qutms_configappbackend_log_storage/
 

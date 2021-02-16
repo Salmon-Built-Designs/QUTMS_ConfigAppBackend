@@ -44,6 +44,9 @@ class split_can_msg:
     # def time(self):
     #     return self.timestamp
 
+    def to_array(self):
+        return np.array([self.timestamp, self.msg_type, self.message])
+
     def __str__(self):
         return f"[{self.timestamp}ms]:" + self.msg_type + " | " + str(self.message)
 
@@ -64,7 +67,7 @@ def process_file(path):
     new_log.bms_voltages = compile_voltages(raw_msgs)
 
     # Isolate temperatures
-    
+
 
     #Save
     new_log.save()
@@ -448,10 +451,16 @@ def parse_can_msgs(msgs):
             print("Message was not added to the list")
             parsed = None
 
-        parsed_msgs.append(parsed)
-        #print(len(parsed))
+        parsed_array = parsed.to_array()
+        parsed_msgs.append(parsed_array)
+        
 
-    return parsed_msgs
+    msgs_array = np.stack(parsed_msgs,axis=0)
+
+    msg_dataframe = pd.DataFrame(data=msgs_array, columns=['timestamp', 'message type', 'message'])
+    msg_dataframe.set_index("timestamp", inplace=True)
+
+    return msg_dataframe
 
 def compile_voltages(msgs):
 
