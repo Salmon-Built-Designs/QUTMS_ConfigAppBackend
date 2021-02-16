@@ -11,6 +11,9 @@ SHELL ["conda", "run", "-n", "cfback", "/bin/bash", "-c"]
 
 # The code to run when container is started:
 COPY . .
-ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "cfback", "flask", "run","--host=0.0.0.0"]
-#ENTRYPOINT ["./entrypoint.sh"]
-#ENTRYPOINT ["flask", "run"]
+
+# Enable entrypoint shell permissions
+RUN ["chmod", "+x", "src/entrypoint.sh"]
+
+# Don't need this because of shell script in docker-compose file
+#ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "cfback", "flask", "run","--host=0.0.0.0"]

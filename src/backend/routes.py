@@ -44,7 +44,9 @@ def upload_file():
         if "file" not in request.files:
             abort(400, description="File not found")
 
+
         uploadedFile = request.files["file"]
+        metadata = request.form
 
         # Check file is valid
         if uploadedFile.filename == "":
@@ -71,7 +73,7 @@ def upload_file():
                 # Create new log container and store in memory (override previous)
                 global log_cache
                 log_cache = process_file(os.path.join(
-                    app.config["UPLOAD_FOLDER"], filename))
+                    app.config["UPLOAD_FOLDER"], filename), metadata)
 
                 return {"id":log_cache.id}
 
@@ -89,13 +91,16 @@ def upload_file():
 def pull_data():
     if request.method == "POST":
         try:
-            request_post = request.get_json()
-            request_info = request_post.items()
             msg_type = []
 
-            for key, value in request_info:
-                if key == "type":
-                    msg_type.append(value)
+            if request != None:
+                request_post = request.get_json()
+                request_info = request_post.items()
+                
+
+                for key, value in request_info:
+                    if key == "type":
+                        msg_type.append(value)
 
             msg_range = log_cache.request_msgs(msg_type)
             

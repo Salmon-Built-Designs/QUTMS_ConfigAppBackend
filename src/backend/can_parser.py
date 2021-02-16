@@ -50,7 +50,7 @@ class split_can_msg:
     def __str__(self):
         return f"[{self.timestamp}ms]:" + self.msg_type + " | " + str(self.message)
 
-def process_file(path):
+def process_file(path, metadata):
     if not os.path.exists(path):
         print("log file doesn't exist")
         return
@@ -61,7 +61,7 @@ def process_file(path):
 
     # Parse messages to create readable information
     # Create new log container with messages
-    new_log = log_container(parse_can_msgs(raw_msgs))
+    new_log = log_container(parse_can_msgs(raw_msgs), metadata)
 
     # Isolate voltages
     new_log.bms_voltages = compile_voltages(raw_msgs)

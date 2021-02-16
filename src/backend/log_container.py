@@ -10,9 +10,9 @@ from backend.models import Log
 
 # Receive list of messages and split into packets
 class log_container:
-    def __init__(self, parsed_msgs):
-
-        self.__id = self.__save_db()
+    def __init__(self, parsed_msgs, metadata):
+        self.__id = self.__save_db(metadata)
+        self.metadata = None
         self.msgs = parsed_msgs
         
         self.bms_voltages = None
@@ -21,7 +21,6 @@ class log_container:
         self.ams_runtime = None
         self.sendyne_coulombs = None
         self.sendyne_current = None
-        self.metadata = None
     
     def request_msgs(self, req_type):
         requested_msgs = self.msgs
@@ -35,6 +34,7 @@ class log_container:
 
     def save(self):
         #DUMP_FOLDER = 'export'
+        # SAVE_VOLUME is set in docker-compose to access the storage volume
         SAVE_VOLUME = os.environ.get('SAVE_VOLUME')
         
         file_path = fr'{SAVE_VOLUME}'
@@ -49,11 +49,28 @@ class log_container:
         # Save msgs
         self.msgs.to_csv(log_path + fr'rawMsgs.csv', header=True)
 
+        # Save voltages
         for i in range(len(self.bms_voltages)): 
             self.bms_voltages[i].to_csv(log_path + fr'BMSvoltages_{i}.csv', header=True)
 
-    def __save_db(self):
-        new_db_log = Log(driver='Lando', location='Brisbane', date_recorded=1234, description='driving around yeah')
+    def __save_db(self, metadata):
+        driver = None
+        location = None
+        date_recorded = None
+        description = None
+
+        data = metadata.items()
+        for key, value in data:
+            if key == "driver":
+                driver = value
+            elif key == "location":
+                location = value
+            elif key == "date_recorded":
+                date_recorded = value
+            elif key == "description":
+                description = value
+
+        new_db_log = Log(driver=driver, location=location, date_recorded=date_recorded, description=description)
         db.session.add(new_db_log)
         db.session.commit()
 

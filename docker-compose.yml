@@ -4,7 +4,7 @@ services:
   #Setting up my repository
   chfe:
     image: frontend:staging
-    container_name: confighubfrontend
+    container_name: cfh_frontend
     #stdin_open: true # docker run -i
     #tty: true        # docker run -t
     #links:
@@ -19,7 +19,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: confighubbackend
+    container_name: cfh_backend
     entrypoint: src/entrypoint.sh
     stdin_open: true # docker run -i
     tty: true        # docker run -t
