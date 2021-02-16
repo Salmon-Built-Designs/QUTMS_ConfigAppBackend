@@ -37,16 +37,20 @@ class log_container:
         #DUMP_FOLDER = 'export'
         SAVE_VOLUME = os.environ.get('SAVE_VOLUME')
         
-        file_path = fr'{SAVE_VOLUME}/{self.__id}/'
+        file_path = fr'{SAVE_VOLUME}'
+        log_path = fr'{SAVE_VOLUME}/{self.__id}/'
 
         if not os.path.exists(file_path):
             os.mkdir(file_path)
 
+        if not os.path.exists(log_path):
+            os.mkdir(log_path)
+
         # Save msgs
-        self.msgs.to_csv(file_path + fr'rawMsgs.csv', header=True)
+        self.msgs.to_csv(log_path + fr'rawMsgs.csv', header=True)
 
         for i in range(len(self.bms_voltages)): 
-            self.bms_voltages[i].to_csv(file_path + fr'BMSvoltages_{i}.csv', header=True)
+            self.bms_voltages[i].to_csv(log_path + fr'BMSvoltages_{i}.csv', header=True)
 
     def __save_db(self):
         new_db_log = Log(driver='Lando', location='Brisbane', date_recorded=1234, description='driving around yeah')

@@ -45,7 +45,7 @@ class split_can_msg:
     #     return self.timestamp
 
     def to_array(self):
-        return np.array([self.timestamp, self.msg_type, self.message])
+        return np.array([self.timestamp, self.msg_type, self.message],dtype=object)
 
     def __str__(self):
         return f"[{self.timestamp}ms]:" + self.msg_type + " | " + str(self.message)

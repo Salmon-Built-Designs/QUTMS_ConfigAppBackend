@@ -48,6 +48,10 @@ def create_db():
         db.create_all()
         db.session.commit()
 
-create_db()
+#if testing locally
+if os.environ.get('DATABASE_URL') == "":
+    create_db()
+
+
 
 from backend import routes, models

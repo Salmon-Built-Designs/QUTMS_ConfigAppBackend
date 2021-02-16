@@ -7,9 +7,6 @@ COPY environment.yml .
 RUN conda env create -f environment.yml
 
 # Make RUN commands use the new environment:
-#SHELL ["conda", "run", "-n", "cfback", "/bin/bash", "-c"]
-
-# Make RUN commands use the new environment:
 SHELL ["conda", "run", "-n", "cfback", "/bin/bash", "-c"]
 
 # The code to run when container is started:
