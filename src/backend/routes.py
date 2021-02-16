@@ -92,11 +92,10 @@ def pull_data():
     if request.method == "POST":
         try:
             msg_type = []
+            request_post = request.get_json()
 
-            if request.get_json != None:
-                request_post = request.get_json()
+            if request_post != None:
                 request_info = request_post.items()
-                
 
                 for key, value in request_info:
                     if key == "type":
