@@ -9,6 +9,7 @@ import datetime
 import os
 import json
 import traceback
+import pickle
 
 # This file details all the routing to the front end including http requests, uploads, logins, etc
 
@@ -141,7 +142,23 @@ def get_sessions():
 # Set new session for given ID
 @app.route('/new-session', methods=["GET", "POST"])
 def new_session():
-    raise Exception("Still need to implement new session")
+    try:
+        request_post = request.form["id"]
+
+        SAVE_VOLUME = os.environ.get('SAVE_VOLUME')
+        log_path = fr'{SAVE_VOLUME}/{request_post}/'
+
+        filehandler = open(log_path + fr'log_dump.pkl', 'rb')
+
+        global log_cache
+        log_cache = pickle.load(filehandler)
+        
+    except Exception as e:
+            print("Failed to restore session.")
+            print(e)
+            print(traceback.format_exc())
+            abort(400, description="Bad request.")
+
     return {"id":log_cache.id}   
 
 

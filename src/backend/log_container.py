@@ -7,12 +7,13 @@ from flask_sqlalchemy import SQLAlchemy
 from backend.can_ids import *
 from backend import app, db, guard, models
 from backend.models import Log
+import pickle
 
 # Receive list of messages and split into packets
 class log_container:
     def __init__(self, parsed_msgs, metadata):
         self.__id = self.__save_db(metadata)
-        self.metadata = None
+        self.metadata = metadata
         self.msgs = parsed_msgs
         self.msgs_dataframe = self.__to_dataframe(self.msgs)
         
@@ -34,7 +35,6 @@ class log_container:
             return requested_msgs
 
     def save(self):
-        #DUMP_FOLDER = 'export'
         # SAVE_VOLUME is set in docker-compose to access the storage volume
         SAVE_VOLUME = os.environ.get('SAVE_VOLUME')
         
@@ -53,6 +53,11 @@ class log_container:
         # Save voltages
         for i in range(len(self.bms_voltages)): 
             self.bms_voltages[i].to_csv(log_path + fr'BMSvoltages_{i}.csv', header=True)
+
+        # Save object as pickle
+        with open(log_path + 'log_dump.pkl', 'wb') as output:  # Overwrites any existing file.
+            pickle.dump(self, output, pickle.HIGHEST_PROTOCOL)
+        
 
     def __save_db(self, metadata):
         driver = None

@@ -4,8 +4,6 @@ from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_cors import CORS
 import flask_praetorian
-
-
 from functools import partial, wraps
 
 import os
@@ -14,6 +12,17 @@ import time
 from backend.config import Config
 
 import re  # only need this if you are on Windows (Darwin / mac doesnt need this)
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 
 app = Flask(__name__)
@@ -48,10 +57,17 @@ def create_db():
         db.create_all()
         db.session.commit()
 
-#if testing locally
+#if testing locally, start with a new database
 if os.environ.get('DATABASE_URL') == None:
-    print("Local development environment detected. New empty database create.")
+    print(f"{bcolors.WARNING}##################################################################{bcolors.ENDC}")
+    print(f"{bcolors.WARNING}Local development environment detected. New empty database create.{bcolors.ENDC}")
+    print(f"{bcolors.WARNING}##################################################################{bcolors.ENDC}")
     create_db()
+else:
+    #print("Docker environment detected. Proceding with docker db volume.")
+    print(f"{bcolors.WARNING}#############################################################{bcolors.ENDC}")
+    print(f"{bcolors.WARNING}Docker environment detected. Proceding with docker db volume.{bcolors.ENDC}")
+    print(f"{bcolors.WARNING}#############################################################{bcolors.ENDC}")
 
 
 
