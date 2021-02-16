@@ -93,7 +93,7 @@ def pull_data():
         try:
             msg_type = []
 
-            if request != None:
+            if request.get_json != None:
                 request_post = request.get_json()
                 request_info = request_post.items()
                 
