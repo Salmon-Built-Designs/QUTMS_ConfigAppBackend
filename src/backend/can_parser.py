@@ -451,16 +451,9 @@ def parse_can_msgs(msgs):
             print("Message was not added to the list")
             parsed = None
 
-        parsed_array = parsed.to_array()
-        parsed_msgs.append(parsed_array)
+        parsed_msgs.append(parsed)
         
-
-    msgs_array = np.stack(parsed_msgs,axis=0)
-
-    msg_dataframe = pd.DataFrame(data=msgs_array, columns=['timestamp', 'message type', 'message'])
-    msg_dataframe.set_index("timestamp", inplace=True)
-
-    return msg_dataframe
+    return parsed_msgs
 
 def compile_voltages(msgs):
 

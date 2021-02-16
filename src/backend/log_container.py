@@ -14,6 +14,7 @@ class log_container:
         self.__id = self.__save_db(metadata)
         self.metadata = None
         self.msgs = parsed_msgs
+        self.msgs_dataframe = self.__to_dataframe(self.msgs)
         
         self.bms_voltages = None
         self.bms_temps = None
@@ -25,7 +26,7 @@ class log_container:
     def request_msgs(self, req_type):
         requested_msgs = self.msgs
 
-        if type == None:
+        if req_type == None:
             return requested_msgs
         else:
             # Filter to msg type
@@ -47,7 +48,7 @@ class log_container:
             os.mkdir(log_path)
 
         # Save msgs
-        self.msgs.to_csv(log_path + fr'rawMsgs.csv', header=True)
+        self.msgs_dataframe.to_csv(log_path + fr'rawMsgs.csv', header=True)
 
         # Save voltages
         for i in range(len(self.bms_voltages)): 
@@ -75,6 +76,20 @@ class log_container:
         db.session.commit()
 
         return new_db_log.id
+
+    def __to_dataframe(self, msgs_list):
+        msg_arrays = []
+
+        for msg in msgs_list:
+            msg_array = msg.to_array()
+            msg_arrays.append(msg_array)
+
+        msgs_stack = np.stack(msg_arrays,axis=0)
+
+        msg_dataframe = pd.DataFrame(data=msgs_stack, columns=['timestamp', 'message type', 'message'])
+        msg_dataframe.set_index("timestamp", inplace=True)
+
+        return msg_dataframe
 
     @property
     def id(self):

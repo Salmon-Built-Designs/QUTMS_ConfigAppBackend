@@ -89,27 +89,28 @@ def upload_file():
 # Respond to a request for log data
 @app.route('/pull', methods=["GET", "POST"])
 def pull_data():
-    if request.method == "POST":
-        try:
+    try:
+        msg_type = None
+        request_post = request.get_json()
+
+        if request_post != None:
+            request_info = request_post.items()
+
             msg_type = []
-            request_post = request.get_json()
 
-            if request_post != None:
-                request_info = request_post.items()
+            for key, value in request_info:
+                if key == "type":
+                    msg_type.append(value)
 
-                for key, value in request_info:
-                    if key == "type":
-                        msg_type.append(value)
-
-            msg_range = log_cache.request_msgs(msg_type)
-            
-        except Exception as e:
-                print("Failed to get filtered data. Check json request format.")
-                print(e)
-                print(traceback.format_exc())
-                abort(400, description="Bad request.")
-
-    return jsonify([msg.__dict__ for msg in msg_range])
+        global log_cache
+        msg_range = log_cache.request_msgs(msg_type)
+        return jsonify([msg.__dict__ for msg in msg_range])
+        
+    except Exception as e:
+            print("Failed to get filtered data. Check json request format.")
+            print(e)
+            print(traceback.format_exc())
+            abort(400, description="Bad request.")
 
 # Return current session ID
 @app.route('/session')

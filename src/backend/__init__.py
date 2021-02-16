@@ -49,7 +49,8 @@ def create_db():
         db.session.commit()
 
 #if testing locally
-if os.environ.get('DATABASE_URL') == "":
+if os.environ.get('DATABASE_URL') == None:
+    print("Local development environment detected. New empty database create.")
     create_db()
 
 
