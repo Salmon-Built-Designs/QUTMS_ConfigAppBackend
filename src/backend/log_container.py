@@ -37,6 +37,8 @@ class log_container:
     def save(self):
         # SAVE_VOLUME is set in docker-compose to access the storage volume
         SAVE_VOLUME = os.environ.get('SAVE_VOLUME')
+        if SAVE_VOLUME == None:
+            SAVE_VOLUME = "export"
         
         file_path = fr'{SAVE_VOLUME}'
         log_path = fr'{SAVE_VOLUME}/{self.__id}/'
@@ -53,6 +55,10 @@ class log_container:
         # Save voltages
         for i in range(len(self.bms_voltages)): 
             self.bms_voltages[i].to_csv(log_path + fr'BMSvoltages_{i}.csv', header=True)
+
+        # Save metadata
+        # with open(log_path + 'metadata.json', 'w') as output:
+        #     output.write(self.metadata)
 
         # Save object as pickle
         with open(log_path + 'log_dump.pkl', 'wb') as output:  # Overwrites any existing file.

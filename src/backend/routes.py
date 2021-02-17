@@ -36,8 +36,6 @@ def sanitize_windows(filename: str) -> str:
     )
 
 # Retrieve the uploaded log file
-
-
 @app.route("/upload", methods=["GET", "POST"])
 def upload_file():
     if request.method == "POST":
@@ -45,8 +43,9 @@ def upload_file():
         if "file" not in request.files:
             abort(400, description="File not found")
 
-
+        # Get uploaded file
         uploadedFile = request.files["file"]
+        # Get upload user entered data from the form
         metadata = request.form
 
         # Check file is valid
@@ -116,12 +115,13 @@ def pull_data():
 # Return current session ID
 @app.route('/session')
 def current_session():
-        return {"id":log_cache.id}
 
-# Get list of available sessions/log IDs
-@app.route('/history')
-def get_sessions():
+    query = Log.query.get(log_cache.id)
+    log_info = log_info_to_json(query)
 
+    return json.dumps(log_info.__dict__)
+
+def log_info_to_json(row):
     class found_log(object):
         def __init__(self, id, description, driver, location, date_created, date_recorded):
             self.id = id
@@ -131,11 +131,17 @@ def get_sessions():
             self.date_created = str(date_created)
             self.date_recorded = date_recorded
 
+    return found_log(row.id, row.description, row.driver, row.location, row.date_created, row.date_recorded)
+
+
+# Get list of available sessions/log IDs
+@app.route('/history')
+def get_sessions():
     query = Log.query.all()
     found_logs = []
 
     for row in query:
-        found_logs.append(found_log(row.id, row.description, row.driver, row.location, row.date_created, row.date_recorded))
+        found_logs.append(log_info_to_json(row))
 
     return json.dumps([log.__dict__ for log in found_logs])
 
@@ -143,15 +149,22 @@ def get_sessions():
 @app.route('/new-session', methods=["GET", "POST"])
 def new_session():
     try:
-        request_post = request.form["id"]
+        request_id = request.form["id"]
 
-        SAVE_VOLUME = os.environ.get('SAVE_VOLUME')
-        log_path = fr'{SAVE_VOLUME}/{request_post}/'
+        query = Log.query.get(request_id)
 
-        filehandler = open(log_path + fr'log_dump.pkl', 'rb')
+        if query != None:
+            SAVE_VOLUME = os.environ.get('SAVE_VOLUME')
+            log_path = fr'{SAVE_VOLUME}/{request_id}/'
 
-        global log_cache
-        log_cache = pickle.load(filehandler)
+            filehandler = open(log_path + fr'log_dump.pkl', 'rb')
+
+            global log_cache
+            log_cache = pickle.load(filehandler)
+
+            return f"Log (ID:{log_cache.id}) has been successfully restored."
+        #else:
+            #abort(404)
         
     except Exception as e:
             print("Failed to restore session.")
@@ -159,7 +172,7 @@ def new_session():
             print(traceback.format_exc())
             abort(400, description="Bad request.")
 
-    return {"id":log_cache.id}   
+    return f"Log (ID:{request_id}) could not be found.", 404
 
 
 @app.route('/login', methods=['POST'])

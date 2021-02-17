@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Migrate db to new model if there are changes
+echo 
 conda run --no-capture-output -n cfback flask db upgrade
 
 # Start up the backend server

@@ -51,24 +51,20 @@ db.init_app(app)
 global log_cache
 log_cache = None
 
-def create_db():
-    with app.app_context():
-        db.drop_all()
-        db.create_all()
-        db.session.commit()
+# def create_db():
+#     with app.app_context():
+#         #db.drop_all()
+#         db.create_all()
+#         db.session.commit()
 
-#if testing locally, start with a new database
-if os.environ.get('DATABASE_URL') == None:
-    print(f"{bcolors.WARNING}##################################################################{bcolors.ENDC}")
-    print(f"{bcolors.WARNING}Local development environment detected. New empty database create.{bcolors.ENDC}")
-    print(f"{bcolors.WARNING}##################################################################{bcolors.ENDC}")
-    create_db()
-else:
-    #print("Docker environment detected. Proceding with docker db volume.")
-    print(f"{bcolors.WARNING}#############################################################{bcolors.ENDC}")
-    print(f"{bcolors.WARNING}Docker environment detected. Proceding with docker db volume.{bcolors.ENDC}")
-    print(f"{bcolors.WARNING}#############################################################{bcolors.ENDC}")
+# if (os.environ.get('DOCKER_ENV') == True):
+#     print(f"{bcolors.WARNING}Docker environment detected{bcolors.ENDC}")
+# else:
+#     print(f"{bcolors.WARNING}###############################{bcolors.ENDC}")
+#     print(f"{bcolors.WARNING}Local dev environment detected.{bcolors.ENDC}")
+#     print(f"{bcolors.WARNING}###############################{bcolors.ENDC}")
 
+# create_db()
 
 
 from backend import routes, models
