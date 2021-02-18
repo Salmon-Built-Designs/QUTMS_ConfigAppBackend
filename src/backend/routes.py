@@ -173,20 +173,20 @@ def get_sessions():
 @app.route('/new-session', methods=["GET", "POST"])
 def new_session():
     try:
-        request_id = request.form["id"]
+        if request.is_json:
+            request_id = request.get_json()
+            query = request_id["id"]
 
-        query = Log.query.get(request_id)
+            if query != None:
+                SAVE_VOLUME = os.environ.get('SAVE_VOLUME')
+                log_path = fr'{SAVE_VOLUME}/{query}/'
 
-        if query != None:
-            SAVE_VOLUME = os.environ.get('SAVE_VOLUME')
-            log_path = fr'{SAVE_VOLUME}/{request_id}/'
+                filehandler = open(log_path + fr'log_dump.pkl', 'rb')
 
-            filehandler = open(log_path + fr'log_dump.pkl', 'rb')
+                global log_cache
+                log_cache = pickle.load(filehandler)
 
-            global log_cache
-            log_cache = pickle.load(filehandler)
-
-            return f"Log (ID:{log_cache.id}) has been successfully restored."
+                return f"Log (ID:{log_cache.id}) has been successfully restored."
         #else:
             #abort(404)
         
