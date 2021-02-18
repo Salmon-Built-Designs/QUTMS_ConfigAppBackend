@@ -8,19 +8,12 @@ channels:
 #https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#updating-an-environment
 
 dependencies:
-  #All versions as of 28th October 2020
-  #- plotly==4.12.0 #browser-based graphing library
   - pip==20.2.4 #tool for installing Python packages
-  #- nodejs==14.14.0 #platform for easily building fast, scalable network applications
   - httptools==0.1.1 #Fast HTTP parser
-  #- pyserial==3.4 #serial port access library
-  #- pyinstaller==4.0 #bundles a Python application and all its dependencies into a single package.
-  #- quart==0.10.0 #Python backend web framework
   - numpy==1.19.2 #Array processing for numbers, strings, records, and objects.
   - h2==3.2.0
   - pylint==2.6.0 # for linting when you code
   - black==20.8b1 # for autoformatting (when you save)
-  #- quart-cors==0.2.0 #Enables Cross Origin Resource Sharing addon for Quart
   - werkzeug==1.0.1
   - flask==1.1.2
   - flask-sqlalchemy==2.4.4
@@ -28,22 +21,20 @@ dependencies:
   - flask-wtf==0.14.3
   - flask-migrate==2.4.0
   - flask-cors==3.0.9
-  #- gunicorn
+  - pandas
   - pip: 
     - flask-praetorian==1.1.0
     - psycopg2-binary==2.8.4
-  # - mysql-connector-python
-  # - python-dotenv==0.14.0 #Get and set values in your .env file in local and production servers
-  #- websockets==8.1
+    - sqlathanor
+    - gunicorn
+
 
 # Environment must be recreated for variables to be set. Updating doesn't work
 # The docker cache must also be cleared to make room for the new environment
 variables:
   FLASK_APP: src/main.py
-  FLASK_ENV: development
-  HOST: http://0.0.0.0
+  FLASK_ENV: production
   FLASK_RUN_PORT: 5873
-  DATABASE_URL: postgresql://admin:admin@db:5432/cfhub_db
   SQL_HOST: db
   SQL_PORT: 5432
   DATABASE: postgres

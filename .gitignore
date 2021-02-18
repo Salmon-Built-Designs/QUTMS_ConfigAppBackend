@@ -4,4 +4,7 @@ env
 node_modules
 JSON_dumps
 uploads
-.vscode/settings.json
+.vscode/*
+!.vscode/launch.json
+LOG.CC
+export

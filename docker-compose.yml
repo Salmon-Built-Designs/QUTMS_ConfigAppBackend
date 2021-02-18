@@ -4,11 +4,7 @@ services:
   #Setting up my repository
   chfe:
     image: qutmotorsport/configapp-frontend:test
-    #image: frontend:staging
-    container_name: confighubfrontend
-    stdin_open: true # docker run -i
-    tty: true        # docker run -t
-    #links:
+    container_name: cfh_frontend
     depends_on:
       - chbe
     expose:
@@ -16,12 +12,20 @@ services:
     ports:
       - "3000:3000"
   chbe:
-    image: qutmotorsport/configapp-backend
-    #image: backend:staging
-    container_name: confighubbackend
-    environment:
-      - FLASK_RUN_PORT=5873
-      - FLASK_APP=src/main.py
+    image: backend:dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cfh_backend
+    entrypoint: src/entrypoint.sh
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
+    environment: # Needed to override some environment variables so that the backend uses docker volumes
+      - DATABASE_URL=postgresql://admin:admin@db:5432/cfhub_db
+      - SAVE_VOLUME=/var/lib/docker/volumes/qutms_configappbackend_log_storage/
+      - DOCKER_ENV=True
+    volumes:
+      - log_storage:/var/lib/docker/volumes/qutms_configappbackend_log_storage/
 
     expose:
       - 5873
@@ -41,3 +45,4 @@ services:
 
 volumes:
   postgres_data:
+  log_storage:
