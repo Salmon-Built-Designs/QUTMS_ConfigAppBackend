@@ -90,6 +90,11 @@ def upload_file():
 @app.route('/pull', methods=["GET", "POST"])
 def pull_data():
     try:
+        global log_cache
+        if log_cache == None:
+            abort(400, description="No active session.")
+
+
         msg_type = None
         request_post = request.get_json()
 
@@ -102,7 +107,6 @@ def pull_data():
                 if key == "type":
                     msg_type.append(value)
 
-        global log_cache
         msg_range = log_cache.request_msgs(msg_type)
         return jsonify([msg.__dict__ for msg in msg_range])
         
@@ -196,7 +200,7 @@ def new_session():
             print(traceback.format_exc())
             abort(400, description="Bad request.")
 
-    return f"Log (ID:{request_id}) could not be found.", 404
+    #return f"Log (ID:{request_id}) could not be found.", 404
 
 
 @app.route('/login', methods=['POST'])

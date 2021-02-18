@@ -35,7 +35,7 @@ def get_logs():
 
 # This is not needed because the backend is started with 'flask run'
 # Uncomment this to use VSC debugger
-app.run(host="0.0.0.0", port="5873")
+#app.run(host="0.0.0.0", port="5873")
 
 # curl 0.0.0.0:5873/pull -d '{"type": "PDM_Heartbeat"}' -H 'Content-Type: application/json'
 # curl 0.0.0.0:5873/upload -F "file=@LOG.CC"

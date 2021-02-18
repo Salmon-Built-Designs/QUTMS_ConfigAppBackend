@@ -3,11 +3,8 @@ version: '3'
 services:
   #Setting up my repository
   chfe:
-    image: frontend:staging
+    image: qutmotorsport/configapp-frontend:test
     container_name: cfh_frontend
-    #stdin_open: true # docker run -i
-    #tty: true        # docker run -t
-    #links:
     depends_on:
       - chbe
     expose:
@@ -15,10 +12,10 @@ services:
     ports:
       - "3000:3000"
   chbe:
-    # image: backend:dev
-    # build:
-    #   context: .
-    #   dockerfile: Dockerfile
+    image: backend:dev
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: cfh_backend
     entrypoint: src/entrypoint.sh
     stdin_open: true # docker run -i
