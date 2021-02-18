@@ -510,7 +510,10 @@ def compile_voltages(msgs):
             volt_array = np.array(voltage_data[i])
 
         volt_dataframe = pd.DataFrame(data=volt_array, columns=cols)
-        volt_dataframe.set_index("timestamp", inplace=True)
+        #volt_dataframe.set_index("timestamp", inplace=True)
+
+        # Remove nan values
+        volt_dataframe = volt_dataframe.interpolate(method='pad', limit=2, axis=0).copy()
 
         volt_dataframes.append(volt_dataframe)
 

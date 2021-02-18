@@ -112,6 +112,30 @@ def pull_data():
             print(traceback.format_exc())
             abort(400, description="Bad request.")
 
+@app.route('/analysis', methods=["GET", "POST"])
+def analysis_data():
+    try:
+        if request.is_json:
+            request_post = request.get_json()
+            request_info = request_post.items()
+
+            msg_type = None
+            msg_id = None
+
+            for key, value in request_info:
+                if key == "type":
+                    msg_type = value
+                if key == "id":
+                    msg_id = value
+
+            return log_cache.request_data(msg_type, msg_id)
+
+    except Exception as e:
+        print("Failed to get graph data. Check json request format.")
+        print(e)
+        print(traceback.format_exc())
+        abort(400, description="Bad request.")  
+
 # Return current session ID
 @app.route('/session')
 def current_session():

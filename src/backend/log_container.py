@@ -34,6 +34,10 @@ class log_container:
             requested_msgs = [ msg for msg in requested_msgs if (msg.msg_type in req_type)]
             return requested_msgs
 
+    def request_data(self, req_type, id):
+        if req_type == "BMS_TransmitVoltage":
+            return self.bms_voltages[id].to_json(orient="records")
+
     def save(self):
         # SAVE_VOLUME is set in docker-compose to access the storage volume
         SAVE_VOLUME = os.environ.get('SAVE_VOLUME')

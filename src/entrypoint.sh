@@ -1,10 +1,12 @@
 #!/bin/bash
 
 # Migrate db to new model if there are changes
-echo 
-conda run --no-capture-output -n cfback flask db upgrade
+echo Migrating database changes if there are any...
+conda run --no-capture-output -n cfback flask db upgrade &> /dev/null
+echo Database migration completed.
 
 # Start up the backend server
+echo Starting up backend server...
 conda run --no-capture-output -n cfback flask run --host=0.0.0.0
 
 # Setup gunicorn (to be implemented)
