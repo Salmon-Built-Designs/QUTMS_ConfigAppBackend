@@ -1,105 +1,10 @@
 from flask import jsonify, json
 import os
 import uuid
-
-# Helper function to compose the CAN ID by concatenating
-def Compose_CANId(priority, sourceId, autonomous, type, extra, BMSId):
-    return ((priority & 0x3) << 27) | ((sourceId & 0x1FF) << 18) | ((autonomous & 0x1) << 17) | ((type & 0x7) << 14) | ((extra & 0x3FF) << 4) | (BMSId & 0xF)
-
-# Define CAN numbers
-CAN_PRIORITY_ERROR = 0x0
-CAN_PRIORITY_HEARTBEAT = 0x1
-CAN_PRIORITY_NORMAL = 0x2
-CAN_PRIORITY_DEBUG = 0x3
-
-CAN_SRC_ID_SHDN = 0x06
-CAN_SRC_ID_AMS = 0x10
-CAN_SRC_ID_BMS = 0x12
-CAN_SRC_ID_PDM = 0x14
-CAN_SRC_ID_CC = 0x16
-
-CAN_TYPE_ERROR = 0x0
-CAN_TYPE_HEARTBEAT = 0x1
-CAN_TYPE_RECEIVE = 0x2
-CAN_TYPE_TRANSMIT = 0x3
-CAN_TYPE_STREAM = 0x7
-
-CAN_MASK_EXTRA = (0x3FF << 4)
-
-DRIVER = 0x00
-DRIVERLESS = 0x01
-
-
-# Create IDs
-AMS_CellVoltageShutdown_ID 		= Compose_CANId(CAN_PRIORITY_ERROR, CAN_SRC_ID_AMS, DRIVER, 0x0, 0x0, 0x0)
-AMS_CellTemperatureShutdown_ID 	= Compose_CANId(CAN_PRIORITY_ERROR, CAN_SRC_ID_AMS, DRIVER, 0x0, 0x1, 0x0)
-AMS_MissingBMS_ID 				= Compose_CANId(CAN_PRIORITY_ERROR, CAN_SRC_ID_AMS, DRIVER, 0x0, 0x2, 0x0)
-AMS_HeartbeatRequest_ID 		= Compose_CANId(CAN_PRIORITY_ERROR, CAN_SRC_ID_AMS, DRIVER, 0x1, 0x0, 0x0)
-AMS_HeartbeatResponse_ID 		= Compose_CANId(CAN_PRIORITY_HEARTBEAT, CAN_SRC_ID_AMS, DRIVER, 0x1, 0x01, 0x0)
-AMS_StartUp_ID					= Compose_CANId(CAN_PRIORITY_ERROR, CAN_SRC_ID_AMS, DRIVER, 0x2, 0x0, 0x0)
-AMS_ResetTractive_ID			= Compose_CANId(CAN_PRIORITY_ERROR, CAN_SRC_ID_AMS, DRIVER, 0x2, 0x1, 0x0)
-AMS_Shutdown_ID 				= Compose_CANId(CAN_PRIORITY_ERROR, CAN_SRC_ID_AMS, DRIVER, 0x2, 0x2, 0x0)
-AMS_RequestTemperature_ID 		= Compose_CANId(CAN_PRIORITY_ERROR, CAN_SRC_ID_AMS, DRIVER, 0x2, 0x3, 0x0)
-AMS_TransmitTemperature_ID		= Compose_CANId(CAN_PRIORITY_ERROR, CAN_SRC_ID_AMS, DRIVER, 0x3, 0x3, 0x0)
-AMS_RequestChargeState_ID 		= Compose_CANId(CAN_PRIORITY_ERROR, CAN_SRC_ID_AMS, DRIVER, 0x2, 0x4, 0x0)
-AMS_TransmitChargeState_ID 		= Compose_CANId(CAN_PRIORITY_ERROR, CAN_SRC_ID_AMS, DRIVER, 0x3, 0x4, 0x0)
-AMS_Ready_ID					= Compose_CANId(CAN_PRIORITY_ERROR, CAN_SRC_ID_AMS, DRIVER, 0x3, 0x0, 0x0)
-
-BMS_BadCellVoltage_ID 			= Compose_CANId(CAN_PRIORITY_ERROR, CAN_SRC_ID_BMS, DRIVER, CAN_TYPE_ERROR, 0x00, 0x00)
-BMS_BadCellTemperature_ID		= Compose_CANId(CAN_PRIORITY_ERROR, CAN_SRC_ID_BMS, DRIVER, CAN_TYPE_ERROR,  0x01, 0x00)
-BMS_TransmitVoltage_ID			= Compose_CANId(CAN_PRIORITY_NORMAL, CAN_SRC_ID_BMS, DRIVER, CAN_TYPE_TRANSMIT, 0x2, 0x00)
-BMS_TransmitTemperature_ID 		= Compose_CANId(CAN_PRIORITY_NORMAL, CAN_SRC_ID_BMS, DRIVER, CAN_TYPE_TRANSMIT, 0x3, 0x00)
-BMS_ChargeEnabled_ID			= Compose_CANId(CAN_PRIORITY_NORMAL, CAN_SRC_ID_BMS, DRIVER, CAN_TYPE_RECEIVE, 0x0, 0x00)
-
-CC_ReadyToDrive_ID 				= Compose_CANId(CAN_PRIORITY_NORMAL, CAN_SRC_ID_CC, DRIVER, 0x0, 0x0, 0x0)
-CC_FatalShutdown_ID 			= Compose_CANId(CAN_PRIORITY_NORMAL, CAN_SRC_ID_CC, DRIVER, 0x0, 0x1, 0x0)
-CC_SoftShutdown_ID				= Compose_CANId(CAN_PRIORITY_NORMAL, CAN_SRC_ID_CC, DRIVER, 0x0, 0x1, 0x1)
-
-PDM_InitiateStartup_ID			= Compose_CANId(CAN_PRIORITY_NORMAL, CAN_SRC_ID_PDM, DRIVER, CAN_TYPE_RECEIVE, 0x00, 0x0)
-PDM_StartupOk_ID 				= Compose_CANId(CAN_PRIORITY_NORMAL, CAN_SRC_ID_PDM, DRIVER, CAN_TYPE_TRANSMIT, 0x00, 0x0)
-PDM_SelectStartup_ID			= Compose_CANId(CAN_PRIORITY_NORMAL, CAN_SRC_ID_PDM, DRIVER, CAN_TYPE_TRANSMIT, 0x01, 0x0)
-PDM_SetChannelStates_ID 		= Compose_CANId(CAN_PRIORITY_NORMAL, CAN_SRC_ID_PDM, DRIVER, CAN_TYPE_RECEIVE, 0x02, 0x0)
-PDM_Heartbeat_ID				= Compose_CANId(CAN_PRIORITY_HEARTBEAT, CAN_SRC_ID_PDM, DRIVER, CAN_TYPE_HEARTBEAT, 0x0, 0x0)
-PDM_RequestDutyCycle_ID			= Compose_CANId(CAN_PRIORITY_NORMAL, CAN_SRC_ID_PDM, DRIVER, CAN_TYPE_RECEIVE, 0x3, 0x0)
-PDM_SetDutyCycle_ID 			= Compose_CANId(CAN_PRIORITY_NORMAL, CAN_SRC_ID_PDM, DRIVER, CAN_TYPE_RECEIVE, 0x4, 0x0)
-PDM_TransmitDutyCycle_ID		= Compose_CANId(CAN_PRIORITY_NORMAL, CAN_SRC_ID_PDM, DRIVER, CAN_TYPE_TRANSMIT, 0x4, 0x0)
-
-SHDN_Triggered_ID               = Compose_CANId(CAN_PRIORITY_ERROR, CAN_SRC_ID_SHDN, DRIVER, CAN_TYPE_ERROR, 0x00, 0x00)
-SHDN_Heartbeat_ID               = Compose_CANId(CAN_PRIORITY_HEARTBEAT, CAN_SRC_ID_SHDN, DRIVER, CAN_TYPE_HEARTBEAT, 0x00, 0x00)
-
-id_list = [
-    "AMS_CellVoltageShutdown",
-    "AMS_CellTemperatureShutdown",
-    "AMS_MissingBMS",
-    "AMS_HeartbeatRequest",
-    "AMS_HeartbeatResponse",
-    "AMS_StartUp",
-    "AMS_ResetTractive",
-    "AMS_Shutdown",
-    "AMS_RequestTemperature",
-    "AMS_TransmitTemperature",
-    "AMS_RequestChargeState" ,
-    "AMS_TransmitChargeState" ,
-    "AMS_Ready" ,
-    "BMS_BadCellVoltage" ,
-    "BMS_BadCellTemperature" ,
-    "BMS_TransmitVoltage" ,
-    "BMS_TransmitTemperature" ,
-    "BMS_ChargeEnabled" ,
-    "CC_ReadyToDrive" ,
-    "CC_FatalShutdown" ,
-    "CC_SoftShutdown" ,
-    "PDM_InitiateStartup" ,
-    "PDM_StartupOk" ,
-    "PDM_SelectStartup" ,
-    "PDM_SetChannelStates" ,
-    "PDM_Heartbeat" ,
-    "PDM_RequestDutyCycle" ,
-    "PDM_SetDutyCycle" ,
-    "PDM_TransmitDutyCycle" ,
-    "SHDN_Triggered" ,
-    "SHDN_Heartbeat" 
-]
+import numpy as np
+import pandas as pd
+from backend.log_container import *
+from backend.can_ids import *
 
 
 # Object to contain all raw message information
@@ -139,32 +44,13 @@ class split_can_msg:
     # def time(self):
     #     return self.timestamp
 
+    def to_array(self):
+        return np.array([self.timestamp, self.msg_type, self.message],dtype=object)
+
     def __str__(self):
         return f"[{self.timestamp}ms]:" + self.msg_type + " | " + str(self.message)
 
-# Receive list of messages and split into packets
-class log_container:
-    def __init__(self,split_can_msgs):
-        new_id = uuid.uuid1()
-        self.container_id = new_id.int
-        self.msgs = split_can_msgs
-        self.start_time = self.msgs[0].timestamp
-        self.end_time = self.msgs[-1].timestamp
-    
-    def request_msgs(self, req_type, start_time, end_time):
-        # Filter to time range
-        requested_msgs = [ msg for msg in self.msgs if (msg.timestamp >= start_time and  msg.timestamp <= end_time)]
-
-        if type == None:
-            return requested_msgs
-        else:
-            # Filter to msg type
-            requested_msgs = [ msg for msg in requested_msgs if (msg.msg_type in req_type)]
-            return requested_msgs
-
-            
-
-def process_file(path):
+def process_file(path, metadata):
     if not os.path.exists(path):
         print("log file doesn't exist")
         return
@@ -174,11 +60,22 @@ def process_file(path):
     print(len(raw_msgs), "data entries found.")
 
     # Parse messages to create readable information
-    parsed_msgs = parse_can_msgs(raw_msgs)
+    # Create new log container with messages
+    new_log = log_container(parse_can_msgs(raw_msgs), metadata)
+
+    # Isolate voltages
+    new_log.bms_voltages = compile_voltages(raw_msgs)
+
+    # Isolate temperatures
+
+
+    #Save
+    new_log.save()
+
     print("All messages parsed")
 
     # Return list of message object ready to be turned into JSON
-    return parsed_msgs
+    return new_log
     
 
 
@@ -284,7 +181,7 @@ def parse_ams_heartbeat(msg: raw_can_msg):
         "AMS_Heartbeat",
         [
             f"runtime: {runtime} ",
-            f"voltage:{av_voltage} ",
+            f"voltage: {av_voltage} ",
             f"HVAn: {HVAn}, HVAp: {HVAp}, HVBn: {HVBn}, HVABp: {HVBp}, precharge: {precharge}, init: {initialised}",
         ],
     )
@@ -311,7 +208,6 @@ def parse_cc_soft_shutdown(msg: raw_can_msg):
 
 # BMS MESSAGES (Battery Management System)
 
-
 def parse_bms_transmit_voltage(msg: raw_can_msg):
     bmsID = msg.id & 0xF
     msgID = (msg.data[0] >> 6) & 0x3
@@ -327,7 +223,6 @@ def parse_bms_transmit_voltage(msg: raw_can_msg):
 
     return split_can_msg(msg.timestamp, "BMS_TransmitVoltage", ["ID: ", bmsID, " ","MSG_ID: " , msgID, " VOLT: ", str_voltages])
 
-
 def parse_bms_transmit_temperature(msg: raw_can_msg):
     bmsID = msg.id & 0xF
     msgID = msg.data[0] & 0x1
@@ -339,7 +234,7 @@ def parse_bms_transmit_temperature(msg: raw_can_msg):
     str_temps = ", ".join(str_temps)
 
     return split_can_msg(
-        msg.timestamp, "BMS_TransmitTemperature", ["BMSID: ", bmsID,"MSGID: ", msgID,"TEMPS: ", str_temps]
+        msg.timestamp, "BMS_TransmitTemperature", ["BMSID: ", bmsID," MSGID: ", msgID," TEMPS: ", str_temps]
     )
 
 
@@ -469,7 +364,7 @@ def parse_sendyne(msg: raw_can_msg):
     return split_can_msg(
         msg.timestamp,
         "Sendyne",
-        [id, hex(request), hex(register), msg_type, data, msg.data],
+        [id, hex(request), hex(register)," ", msg_type, " ", data, " ", msg.data],
     )
 
 
@@ -557,6 +452,76 @@ def parse_can_msgs(msgs):
             parsed = None
 
         parsed_msgs.append(parsed)
-        #print(len(parsed))
-
+        
     return parsed_msgs
+
+def compile_voltages(msgs):
+
+    empty_cells = np.empty((4,11))
+    empty_cells[:] = np.nan
+    voltage_cache = np.copy(empty_cells)
+
+    #voltage_data = [[], [], [], []]
+    voltage_data = []
+
+    for msg in msgs:
+        id_no_bmsid = msg.id & (~0b1111)  # Ignore last 4 bits
+        if id_no_bmsid == BMS_TransmitVoltage_ID:
+                bmsID = msg.id & 0xF
+                msgID = (msg.data[0] >> 6) & 0x3
+                voltages = []
+                for i in range(0, int(msg.data_length / 2)):
+                    v_h = (int(msg.data[2 * i + 1] & 0x3F)) << 6
+                    v_l = int(msg.data[2 * i]) & 0x3F
+                    voltage = v_h | v_l
+                    voltages.append(voltage)
+                
+                # Start of a new voltage reading, record timestamp
+                if msgID == 0:
+                    voltage_cache[bmsID][0] = msg.timestamp
+
+                # Remove last 2 excess zeros from the voltage readout
+                if msgID == 2:
+                    voltages = voltages[:len(voltages)-2]
+
+                # add voltages to cache. start one over to leave room for timestamp, shift over depending on msgID
+                for i in range(len(voltages)):
+                    voltage_cache[bmsID][1+(msgID*4 + i)] = voltages[i]
+
+                # Voltage data overflow at msgID, store full readout and clear cache
+                if msgID == 2:
+                    while (len(voltage_data) - 1 < bmsID):
+                        voltage_data.append([])
+                    #if (len(voltage_data) - 1 < bmsID): 
+                        #voltage_data.append([])
+
+                    voltage_data[bmsID].append(np.copy(voltage_cache[bmsID,:]))
+                    voltage_cache[bmsID,:] = np.nan
+
+                
+    volt_dataframes = []
+    cols = ["timestamp"] + list(range(1,11))
+
+    # Create panda dataframes for each voltage data set
+    for i in range(len(voltage_data)):
+        if len(voltage_data[i]) > 1:
+            volt_array = np.stack(voltage_data[i],axis=0)
+        else:
+            volt_array = np.array(voltage_data[i])
+
+        volt_dataframe = pd.DataFrame(data=volt_array, columns=cols)
+        #volt_dataframe.set_index("timestamp", inplace=True)
+
+        # Remove nan values
+        volt_dataframe = volt_dataframe.interpolate(method='pad', limit=2, axis=0).copy()
+
+        volt_dataframes.append(volt_dataframe)
+
+    return volt_dataframes
+
+
+
+                
+
+                
+                

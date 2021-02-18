@@ -8,6 +8,8 @@ from backend.models import User, Log
 import datetime
 import os
 import json
+import traceback
+import pickle
 
 # This file details all the routing to the front end including http requests, uploads, logins, etc
 
@@ -34,8 +36,6 @@ def sanitize_windows(filename: str) -> str:
     )
 
 # Retrieve the uploaded log file
-
-
 @app.route("/upload", methods=["GET", "POST"])
 def upload_file():
     if request.method == "POST":
@@ -43,7 +43,10 @@ def upload_file():
         if "file" not in request.files:
             abort(400, description="File not found")
 
+        # Get uploaded file
         uploadedFile = request.files["file"]
+        # Get upload user entered data from the form
+        metadata = request.form
 
         # Check file is valid
         if uploadedFile.filename == "":
@@ -67,32 +70,17 @@ def upload_file():
 
             # Send file to the CAN parser to be processed
             try:
-
-                msg_data = process_file(os.path.join(
-                    app.config["UPLOAD_FOLDER"], filename))
-
+                # Create new log container and store in memory (override previous)
                 global log_cache
-                log_cache = log_container(msg_data)
+                log_cache = process_file(os.path.join(
+                    app.config["UPLOAD_FOLDER"], filename), metadata)
 
-                # Convert the message list to JSON
-                msg_data_json = json.dumps(
-                    [msg.__dict__ for msg in msg_data], ensure_ascii=False, indent=4
-                )
+                return {"id":log_cache.id}
 
-                if not os.path.exists(DUMP_FOLDER):
-                    os.mkdir(DUMP_FOLDER)
-
-                msg_dump = open(
-                    f"{DUMP_FOLDER}/" +
-                        sanitize_windows(f"{current_time}_JSON.json"), "w"
-                )
-                msg_dump.write(msg_data_json)
-                msg_dump.close
-
-                return jsonify([msg.__dict__ for msg in msg_data])
             except Exception as e:
                 print("File processing failed. See exception:")
                 print(e)
+                print(traceback.format_exc())
                 abort(400, description="Bad file format.")
         else:
             print("Bad file.")
@@ -101,62 +89,114 @@ def upload_file():
 # Respond to a request for log data
 @app.route('/pull', methods=["GET", "POST"])
 def pull_data():
-    if request.method == "POST":
-        try:
-            request_info = request.get_json()
+    try:
+        msg_type = None
+        request_post = request.get_json()
 
-            pairs = request_info.items()
+        if request_post != None:
+            request_info = request_post.items()
 
-            start_time = 0
-            end_time = 0
             msg_type = []
 
-            for key, value in pairs:
-                if key == "start_time":
-                    start_time = int(value)
-                elif key == "end_time":
-                    end_time = int(value) 
-                elif key == "type":
+            for key, value in request_info:
+                if key == "type":
+                    msg_type.append(value)
+
+        global log_cache
+        msg_range = log_cache.request_msgs(msg_type)
+        return jsonify([msg.__dict__ for msg in msg_range])
+        
+    except Exception as e:
+            print("Failed to get filtered data. Check json request format.")
+            print(e)
+            print(traceback.format_exc())
+            abort(400, description="Bad request.")
+
+@app.route('/analysis', methods=["GET", "POST"])
+def analysis_data():
+    try:
+        if request.is_json:
+            request_post = request.get_json()
+            request_info = request_post.items()
+
+            msg_type = None
+            msg_id = None
+
+            for key, value in request_info:
+                if key == "type":
                     msg_type = value
+                if key == "id":
+                    msg_id = value
 
-            if start_time == None | start_time < 0:
-                start_time = 0
+            return log_cache.request_data(msg_type, msg_id)
 
-            msg_range = log_cache.request_msgs(msg_type, start_time, end_time)
-            
-        except Exception as e:
-                print("Failed to get filtered data. Check json request format.")
-                print(e)
-                abort(400, description="Bad request.")
+    except Exception as e:
+        print("Failed to get graph data. Check json request format.")
+        print(e)
+        print(traceback.format_exc())
+        abort(400, description="Bad request.")  
 
-    return jsonify([msg.__dict__ for msg in msg_range])
+# Return current session ID
+@app.route('/session')
+def current_session():
 
-# Receive info data from user and save log info in the database
-@app.route('/save', methods=["GET", "POST"])
-def save_file():
-    if request.method == "POST":
-        request_info = request.get_json()
+    query = Log.query.get(log_cache.id)
+    log_info = log_info_to_json(query)
 
-        pairs = request_info.items()
+    return json.dumps(log_info.__dict__)
 
-        for key, value in pairs:
-            if key == "file_name":
-                input_name = value
-            elif key == "driver":
-                input_driver = value
-            elif key == "location":
-                input_location = value
-            elif key == "date_recorded":
-                input_date_recorded = value
+def log_info_to_json(row):
+    class found_log(object):
+        def __init__(self, id, description, driver, location, date_created, date_recorded):
+            self.id = id
+            self.description = description
+            self.driver = driver
+            self.location = location
+            self.date_created = str(date_created)
+            self.date_recorded = date_recorded
 
-        # with app.app_context():
-        #     db.session.add(Log(
-        #         title=input_name,
-        #         driver=input_driver,
-        #         location=input_location,
-        #         date_recorded=input_date_recorded,
-        #     ))
-        #     db.session.commit()
+    return found_log(row.id, row.description, row.driver, row.location, row.date_created, row.date_recorded)
+
+
+# Get list of available sessions/log IDs
+@app.route('/history')
+def get_sessions():
+    query = Log.query.all()
+    found_logs = []
+
+    for row in query:
+        found_logs.append(log_info_to_json(row))
+
+    return json.dumps([log.__dict__ for log in found_logs])
+
+# Set new session for given ID
+@app.route('/new-session', methods=["GET", "POST"])
+def new_session():
+    try:
+        request_id = request.form["id"]
+
+        query = Log.query.get(request_id)
+
+        if query != None:
+            SAVE_VOLUME = os.environ.get('SAVE_VOLUME')
+            log_path = fr'{SAVE_VOLUME}/{request_id}/'
+
+            filehandler = open(log_path + fr'log_dump.pkl', 'rb')
+
+            global log_cache
+            log_cache = pickle.load(filehandler)
+
+            return f"Log (ID:{log_cache.id}) has been successfully restored."
+        #else:
+            #abort(404)
+        
+    except Exception as e:
+            print("Failed to restore session.")
+            print(e)
+            print(traceback.format_exc())
+            abort(400, description="Bad request.")
+
+    return f"Log (ID:{request_id}) could not be found.", 404
 
 
 @app.route('/login', methods=['POST'])
