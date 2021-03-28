@@ -3,8 +3,9 @@ import os
 import uuid
 import numpy as np
 import pandas as pd
-from backend.log_container import *
-from backend.can_ids import *
+from .log_container import *
+from .can_ids import *
+
 
 
 # Object to contain all raw message information
@@ -57,7 +58,7 @@ def process_file(path, metadata):
 
     # Process the raw binary file into a list of objects
     raw_msgs = read_log_file(path)
-    print(len(raw_msgs), "data entries found.")
+    print("Log file successfully processed.", len(raw_msgs), "data entries found.")
 
     # Parse messages to create readable information
     # Create new log container with messages

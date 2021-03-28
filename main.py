@@ -1,61 +1,38 @@
 import justpy as jp
 import pandas as pd
+import os
+import base64
+from frontend.NavBar import NavBar
+from frontend.UploadForm import UploadForm
+from backend.can_parser import *
 
-class NavBar(jp.Nav):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-        nav_classes = 'text-gray-300 hover:bg-blue-700 hover:text-white px-3 py-2 rounded-none text-sm font-medium'
-        #nav_classes = 'bg-white text-blue-900 px-3 py-2 rounded-none text-sm font-medium'
-
-        root = self
-        c2 = jp.Nav(classes='bg-blue-900', a=root)
-        c3 = jp.Div(classes='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8', a=c2)
-        c4 = jp.Div(classes='flex items-center justify-between h-16', a=c3)
-        c5 = jp.Div(classes='flex items-center', a=c4)
-        c6 = jp.Div(classes='flex-shrink-0', a=c5)
-
-        headerLogo = jp.Img(classes='h-8 w-8', src='https://tailwindui.com/img/logos/workflow-mark-indigo-500.svg', alt='Workflow', a=c6)
-
-        c8 = jp.Div(classes='hidden md:block', a=c5)
-        c9 = jp.Div(classes='ml-10 flex items-baseline space-x-4', a=c8)
-        menuItemHome = jp.A(href='upload', classes=nav_classes, a=c9, text='Upload')
-        menuItemLog = jp.A(href='log', classes=nav_classes , a=c9, text='Log')
-        menuItemAnalysis = jp.A(href='analysis', classes=nav_classes , a=c9, text='Analysis')
-
-        
-
-        #def button_clicked(self):
-            #self.info_div.text = f'Button {msg.target.num} was clicked'
-
-
-
-class UploadForm(jp.Form):
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.set_classes('flex flex-col border m-3 p-5')
-
-        input_classes = 'form-input p-2 m-1'
-        button_classes = 'bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 border border-blue-500 hover:border-transparent rounded m-1'
-
-        root = self
-        in1 = jp.Input(placeholder='Description', a=root, classes=input_classes)
-        in2 = jp.Input(placeholder='Driver', a=root, classes=input_classes)
-        in3 = jp.Input(placeholder='Location', a=root, classes=input_classes)
-        in4 = jp.Input(placeholder='Date Recorded', a=root, classes=input_classes)
-        in10 = jp.Input(type='file', classes=input_classes, a=root, multiple=True)
-        submit_button = jp.Input(value='Upload Log', type='submit', a=root, classes=button_classes)
 
 # Load data showing percent of women in different majors per year
-wm = pd.read_csv('https://elimintz.github.io/women_majors.csv').round(2)
+#wm = pd.read_csv('https://elimintz.github.io/women_majors.csv').round(2)
 
-async def page():
-    wp = jp.WebPage()
-    my_paragraph_design = "w-64 bg-blue-500 m-2 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-    p = jp.P(text='Hello World!', a=wp, classes=my_paragraph_design)
-    
-    return wp
+def file_input(self, msg):
+
+    # Find the element in the form data that contains the file information
+    for c in msg.form_data:
+        if c.type == 'file':
+            break
+
+    for f in c.files:
+        newFile = f
+        print('Uploaded file found.')
+        print(f'{f.name} | {f.size} | {f.type} | {f.lastModified}')
+
+    if not os.path.exists("cache"):
+        os.mkdir("cache")
+
+    # Save uploaded file to cache
+    savedFile = open("cache/log.CC", "wb")
+    savedFile.write(base64.b64decode(newFile.file_content))
+    savedFile.close()
+
+    # Process file
+    process_file("cache/log.cc","")
+
 
 @jp.SetRoute('/upload')
 async def homePage():
@@ -66,36 +43,57 @@ async def homePage():
 
     navBar = NavBar(a=root)
 
-    #wm.jp.ag_grid(a=c1)  # a=wp adds the grid to WebPage wp
+    border = jp.Div(classes='bg-gray-300 p-6', a=root)
 
-    body = jp.Div(classes='flex flex-col items-center justify-center h-screen', a=root)
+    body = jp.Div(classes='bg-white flex flex-col items-center justify-center h-screen', a=border)
     welcomeMsg = jp.P(a=body, text=f'Hello! Please upload a file.', classes='font-bold')
-    uploadForm = UploadForm(a=body)
+    uploadForm = UploadForm(a=body, submit=file_input)
+
+    copyrightMsg = jp.P(a=border, text=f'QUT Motorsport 2021', classes='text-center text-gray-600 mt-6')
 
     return wp
+
 
 @jp.SetRoute('/log')
 async def logPage():
     wp = jp.WebPage()
     
     root = jp.Div(a=wp)
-
     navBar = NavBar(a=root)
+    border = jp.Div(classes='bg-gray-300 p-6', a=root)
 
-    body = jp.Div(classes='flex flex-row items-center justify-center h-screen', a=root)
-    wm.jp.ag_grid(a=body)  # a=wp adds the grid to WebPage wp
+    body = jp.Div(classes='flex flex-row items-center justify-center h-screen bg-white', a=border)
+    log = pd.read_csv('export/1/rawMsgs.csv')
+    log.jp.ag_grid(a=body)  # a=wp adds the grid to WebPage wp
 
     return wp
 
 @jp.SetRoute('/analysis')
-async def logPage():
+async def analysisPage():
     wp = jp.WebPage()
     
     root = jp.Div(a=wp)
 
     navBar = NavBar(a=root)
+    border = jp.Div(classes='bg-gray-300 p-6', a=root)
 
-    body = jp.Div(classes='flex flex-row items-center justify-center h-screen', a=root)
+    tabBar = jp.Nav(classes='flex flex-col sm:flex-row', a=border)
+    tab1 = jp.Button(a=tabBar, text='BMS Voltages', classes='text-gray-600 py-4 px-6 block hover:text-blue-500 focus:outline-none text-blue-900 border-b-2 font-medium border-blue-500')
+    tab2 = jp.Button(a=tabBar, text='Sendyne Temps', classes='text-gray-600 py-4 px-6 block hover:text-blue-500 focus:outline-none')
+
+    body = jp.Div(classes='flex flex-row items-center justify-center h-screen bg-white', a=border)
+    
+    bmsV = pd.read_csv('export/1/BMSvoltages_0.csv')
+    voltages = bmsV.loc[:, bmsV.columns != 'timestamp'] 
+
+    bms_chart = bmsV.jp.plot(0,voltages, kind='spline', a=body, title='BMS Voltage',
+               subtitle='Look at this subtitle!',
+                classes='m-2 p-2 w-full h-full')
+
+    o = bms_chart.options
+    o.xAxis.title.text = 'Timestamp (ms)'
+    o.yAxis.title.text = 'Voltage (mV)'
+    o.plotOptions.series.marker.enabled = False
 
     return wp
 

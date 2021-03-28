@@ -1,18 +1,14 @@
-from flask import jsonify, json
 import os
 import uuid
 import numpy as np
 import pandas as pd
-from flask_sqlalchemy import SQLAlchemy
-from backend.can_ids import *
-from backend import app, db, guard, models
-from backend.models import Log
+from .can_ids import *
 import pickle
 
 # Receive list of messages and split into packets
 class log_container:
     def __init__(self, parsed_msgs, metadata):
-        self.__id = self.__save_db(metadata)
+        self.__id = 1
         self.metadata = metadata
         self.msgs = parsed_msgs
         self.msgs_dataframe = self.__to_dataframe(self.msgs)
@@ -39,10 +35,7 @@ class log_container:
             return self.bms_voltages[id].to_json(orient="records")
 
     def save(self):
-        # SAVE_VOLUME is set in docker-compose to access the storage volume
-        SAVE_VOLUME = os.environ.get('SAVE_VOLUME')
-        if SAVE_VOLUME == None:
-            SAVE_VOLUME = "export"
+        SAVE_VOLUME = "export"
         
         file_path = fr'{SAVE_VOLUME}'
         log_path = fr'{SAVE_VOLUME}/{self.__id}/'
@@ -58,7 +51,7 @@ class log_container:
 
         # Save voltages
         for i in range(len(self.bms_voltages)): 
-            self.bms_voltages[i].to_csv(log_path + fr'BMSvoltages_{i}.csv', header=True)
+            self.bms_voltages[i].to_csv(log_path + fr'BMSvoltages_{i}.csv', header=True, index=False)
 
         # Save metadata
         # with open(log_path + 'metadata.json', 'w') as output:
@@ -67,30 +60,6 @@ class log_container:
         # Save object as pickle
         with open(log_path + 'log_dump.pkl', 'wb') as output:  # Overwrites any existing file.
             pickle.dump(self, output, pickle.HIGHEST_PROTOCOL)
-        
-
-    def __save_db(self, metadata):
-        driver = None
-        location = None
-        date_recorded = None
-        description = None
-
-        data = metadata.items()
-        for key, value in data:
-            if key == "driver":
-                driver = value
-            elif key == "location":
-                location = value
-            elif key == "date_recorded":
-                date_recorded = value
-            elif key == "description":
-                description = value
-
-        new_db_log = Log(driver=driver, location=location, date_recorded=date_recorded, description=description)
-        db.session.add(new_db_log)
-        db.session.commit()
-
-        return new_db_log.id
 
     def __to_dataframe(self, msgs_list):
         msg_arrays = []
