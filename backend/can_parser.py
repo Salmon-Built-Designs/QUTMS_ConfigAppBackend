@@ -1,6 +1,4 @@
-from flask import jsonify, json
 import os
-import uuid
 import numpy as np
 import pandas as pd
 from .log_container import *
@@ -75,7 +73,7 @@ def process_file(path, metadata):
 
     print("All messages parsed")
 
-    # Return list of message object ready to be turned into JSON
+    # Return log container object
     return new_log
     
 

@@ -4,8 +4,11 @@ import os
 import base64
 from frontend.NavBar import NavBar
 from frontend.UploadForm import UploadForm
+from frontend.Tabs import Tabs
 from backend.can_parser import *
 
+
+log_cache = None
 
 # Load data showing percent of women in different majors per year
 #wm = pd.read_csv('https://elimintz.github.io/women_majors.csv').round(2)
@@ -22,16 +25,25 @@ def file_input(self, msg):
         print('Uploaded file found.')
         print(f'{f.name} | {f.size} | {f.type} | {f.lastModified}')
 
-    if not os.path.exists("cache"):
-        os.mkdir("cache")
+    SAVE_VOLUME = 'cache'
+
+    if not os.path.isdir(SAVE_VOLUME):
+        os.mkdir(SAVE_VOLUME)
+
+    if not os.path.isdir(fr'{SAVE_VOLUME}/{msg.session_id}'):
+        os.mkdir(fr'{SAVE_VOLUME}/{msg.session_id}')
 
     # Save uploaded file to cache
-    savedFile = open("cache/log.CC", "wb")
+    savedFile = open(fr'{SAVE_VOLUME}/{msg.session_id}/log.CC', "wb")
     savedFile.write(base64.b64decode(newFile.file_content))
     savedFile.close()
 
+    # Metadata list, need to get user info from form (to be implemented)
+    metadata = [msg.session_id, 'some description', 'some date', 'some driver', 'some location']
+
     # Process file
-    process_file("cache/log.cc","")
+    global log_cache
+    log_cache = process_file(fr'{SAVE_VOLUME}/{msg.session_id}/log.CC',metadata)
     msg.page.redirect = '/log'
 
 @jp.SetRoute('/upload')
@@ -63,18 +75,26 @@ async def logPage():
     root = jp.Div(a=wp, classes='h-screen flex flex-col')
     navBar = NavBar(a=root)
     border = jp.Div(classes='bg-gray-300 p-6 flex flex-col flex-1', a=root)
-
-    tabBar = jp.Nav(classes='flex flex-col sm:flex-row', a=border)
-    tab1 = jp.Button(a=tabBar, text='Raw Data Log', classes='text-gray-600 py-2 px-6 block hover:text-blue-500 focus:outline-none text-blue-900 border-b-2 font-medium border-blue-500')
-
-    body = jp.Div(classes='flex flex-1 bg-white justify-center', a=border)
     
-    log = pd.read_csv('export/1/rawMsgs.csv')
-    grid = jp.AgGrid(a=body, classes='', style='height: full; width: 100%; margin: 0em')
-    grid.load_pandas_frame(log)
+    global log_cache
 
-    #grid.options.columnDefs[0].cellStyle = ['width:2000']
-    #await grid.run_api('autoSizeAllColumns()', wp)
+    if(log_cache != None):
+
+        tabBar = jp.Nav(classes='flex flex-col sm:flex-row', a=border)
+        tab1 = jp.Button(a=tabBar, text='Raw Data Log', classes='text-gray-600 py-2 px-6 block hover:text-blue-500 focus:outline-none text-blue-900 border-b-2 font-medium border-blue-500')
+
+        body = jp.Div(classes='flex flex-1 bg-white justify-center', a=border)
+
+        log = log_cache.msgs_dataframe
+        grid = jp.AgGrid(a=body, classes='', style='height: full; width: 100%; margin: 0em')
+        grid.load_pandas_frame(log)
+        
+        # Need to work out a way to auto size columns
+        #grid.options.columnDefs[0].cellStyle = ['width:2000']
+        #await grid.run_api('autoSizeAllColumns()', wp)
+    else:
+        body = jp.Div(classes='flex flex-1 bg-white justify-center items-center', a=border)
+        jp.P(text = 'Please upload a file first.', classes='text-gray-600 font-medium', a=body)
 
     copyrightMsg = jp.P(a=border, text=f'QUT Motorsport 2021', classes='bg-gray-300 text-center justify-center text-gray-600 pt-6')
 
@@ -82,29 +102,113 @@ async def logPage():
 
 @jp.SetRoute('/analysis')
 async def analysisPage():
-    wp = jp.WebPage()
-    
+    wp = jp.WebPage(data={'tab': 'id2556'})
+
+    root = jp.Div(a=wp, classes='h-screen flex flex-col')
+    NavBar(a=root)
+    border = jp.Div(classes='bg-gray-300 p-6 flex flex-col flex-1', a=root)
+
+    global log_cache
+
+    if(log_cache != None):
+
+        t = Tabs(a=border, classes='flex flex-1 w-full', style='', animation=False, content_height=100)
+
+        # BMS voltages
+        divBMS = jp.Div(style=Tabs.wrapper_style, delete_flag=True)
+        bmsV = log_cache.bms_voltages[0]
+        voltages = bmsV.loc[:, bmsV.columns != 'timestamp'] 
+
+        bms_chart = bmsV.jp.plot(0,voltages, kind='spline', a=divBMS,
+                    classes='p-2 w-full h-full', use_cache=False)
+
+        o = bms_chart.options
+        o.title.text = 'BMS Voltage'
+        o.xAxis.title.text = 'Timestamp (ms)'
+        o.yAxis.title.text = 'Voltage (mV)'
+        o.plotOptions.series.marker.enabled = False
+        
+        t.add_tab('idbms', 'BMS Voltage', divBMS)
+
+        # Sendyne Temperatures
+        # divTemps = jp.Div(style=Tabs.wrapper_style, delete_flag=True)
+        # temps = log_cache.bms_voltages[1]
+        # temperatures = temps.loc[:, temps.columns != 'timestamp'] 
+
+        # temp_chart = temps.jp.plot(0,temperatures, kind='spline', a=divTemps,
+        #             classes='p-2 w-full h-full', use_cache=False)
+
+        # o2 = temp_chart.options
+        # o2.title.text = 'Sendyne Temperatures'
+        # o2.xAxis.title.text = 'Timestamp (ms)'
+        # o2.yAxis.title.text = 'Temperature (C)'
+        # o2.plotOptions.series.marker.enabled = False
+        test = jp.Div(style=Tabs.wrapper_style, delete_flag=True)
+        wipBody = jp.Div(classes='flex flex-1 bg-white justify-center items-center', a=test)
+        jp.P(text = 'To be added. WIP.', classes='text-gray-600 font-medium', a=wipBody)
+
+        
+        t.add_tab('idtemp', 'BMS Temperatures', test)
+        t.add_tab('idSendyne', 'Sendyne', test)
+        t.add_tab('idOther', 'Other Data', test)
+    else:
+        body = jp.Div(classes='flex flex-1 bg-white justify-center items-center', a=border)
+        jp.P(text = 'Please upload a file first.', classes='text-gray-600 font-medium', a=body)
+
+    copyrightMsg = jp.P(a=border, text=f'QUT Motorsport 2021', classes='bg-gray-300 text-center justify-center text-gray-600 pt-6')
+
+
+    return wp
+
+my_chart_def = """
+{
+        chart: {
+            type: 'bar'
+        },
+        title: {
+            text: 'Fruit Consumption'
+        },
+        xAxis: {
+            categories: ['Apples', 'Bananas', 'Oranges']
+        },
+        yAxis: {
+            title: {
+                text: 'Fruit eaten'
+            }
+        },
+        series: [{
+            name: 'Jane',
+            data: [1, 0, 4],
+            animation: false
+        }, {
+            name: 'John',
+            data: [5, 7, 3],
+            animation: false
+        }]
+}
+"""
+
+@jp.SetRoute('/tabs')
+async def tabsPage():
+    wp = jp.WebPage(data={'tab': 'id2556'})
+
     root = jp.Div(a=wp, classes='h-screen flex flex-col')
     navBar = NavBar(a=root)
     border = jp.Div(classes='bg-gray-300 p-6 flex flex-col flex-1', a=root)
 
-    tabBar = jp.Nav(classes='flex flex-col sm:flex-row', a=border)
-    tab1 = jp.Button(a=tabBar, text='BMS Voltages', classes='text-gray-600 py-2 px-6 block hover:text-blue-500 focus:outline-none text-blue-900 border-b-2 font-medium border-blue-500')
-    tab2 = jp.Button(a=tabBar, text='Sendyne Temps', classes='text-gray-600 py-2 px-6 block hover:text-blue-500 focus:outline-none')
+    t = Tabs(a=border, classes='flex flex-1 w-full', style='', animation=True, content_height=100)
+    for chart_type in ['BMS Voltages', 'Temps']:
+        d = jp.Div(style=Tabs.wrapper_style, delete_flag=True)
+        my_chart = jp.HighCharts(a=d, classes='p-5 w-full h-full', style='', options=my_chart_def, use_cache=False)
+        my_chart.options.chart.type = 'spline'
+        my_chart.options.title.text = f'Chart of Type {chart_type.capitalize()}'
+        my_chart.options.subtitle.text = f'Subtitle {chart_type.capitalize()}'
+        t.add_tab(f'id{chart_type}', f'{chart_type}', d)
 
-    body = jp.Div(classes='flex flex-1 bg-white', a=border)
-    
-    bmsV = pd.read_csv('export/1/BMSvoltages_0.csv')
-    voltages = bmsV.loc[:, bmsV.columns != 'timestamp'] 
 
-    bms_chart = bmsV.jp.plot(0,voltages, kind='spline', a=body, title='BMS Voltage',
-               subtitle='Look at this subtitle!',
-                classes='p-2 w-full h-full')
 
-    o = bms_chart.options
-    o.xAxis.title.text = 'Timestamp (ms)'
-    o.yAxis.title.text = 'Voltage (mV)'
-    o.plotOptions.series.marker.enabled = False
+
+
 
     copyrightMsg = jp.P(a=border, text=f'QUT Motorsport 2021', classes='bg-gray-300 text-center justify-center text-gray-600 pt-6')
 

@@ -1,5 +1,4 @@
 import os
-import uuid
 import numpy as np
 import pandas as pd
 from .can_ids import *
@@ -8,7 +7,7 @@ import pickle
 # Receive list of messages and split into packets
 class log_container:
     def __init__(self, parsed_msgs, metadata):
-        self.__id = 1
+        self.__id = metadata[0]
         self.metadata = metadata
         self.msgs = parsed_msgs
         self.msgs_dataframe = self.__to_dataframe(self.msgs)
@@ -35,7 +34,7 @@ class log_container:
             return self.bms_voltages[id].to_json(orient="records")
 
     def save(self):
-        SAVE_VOLUME = "export"
+        SAVE_VOLUME = "storage"
         
         file_path = fr'{SAVE_VOLUME}'
         log_path = fr'{SAVE_VOLUME}/{self.__id}/'
@@ -71,7 +70,7 @@ class log_container:
         msgs_stack = np.stack(msg_arrays,axis=0)
 
         msg_dataframe = pd.DataFrame(data=msgs_stack, columns=['timestamp', 'message type', 'message'])
-        msg_dataframe.set_index("timestamp", inplace=True)
+        #msg_dataframe.set_index("timestamp", inplace=True)
 
         return msg_dataframe
 
