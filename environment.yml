@@ -27,6 +27,7 @@ dependencies:
     - psycopg2-binary==2.8.4
     - sqlathanor
     - gunicorn
+    - justpy
 
 
 # Environment must be recreated for variables to be set. Updating doesn't work

@@ -8,3 +8,5 @@ uploads
 !.vscode/launch.json
 LOG.CC
 export
+storage
+cache
