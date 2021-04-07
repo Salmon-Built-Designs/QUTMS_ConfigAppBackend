@@ -216,5 +216,5 @@ async def tabsPage():
     return wp
 
 
-jp.justpy(homePage)
+jp.justpy(homePage,host='0.0.0.0', port=80)
 
