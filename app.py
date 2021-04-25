@@ -2,10 +2,12 @@ import justpy as jp
 import pandas as pd
 import os
 import base64
+import socket
 from frontend.NavBar import NavBar
 from frontend.UploadForm import UploadForm
 from frontend.Tabs import Tabs
 from backend.can_parser import *
+from backend.can_ids import *
 
 
 log_cache = None
@@ -13,65 +15,48 @@ log_cache = None
 # Load data showing percent of women in different majors per year
 #wm = pd.read_csv('https://elimintz.github.io/women_majors.csv').round(2)
 
-def file_input(self, msg):
+def live_telem():
+    # Setup TCP Connection for CAN1
+    TCP_IP = '192.168.0.7'
+    TCP_PORT_CAN1 = 20001
+    TCP_PORT_CAN2 = 20005 # Double check this
+    BUFFER_SIZE = 4096
+    ID_TYPE = 1
 
-    # Find the element in the form data that contains the file information
-    for c in msg.form_data:
-        if c.type == 'file':
-            break
+    while True:
+	    # Connect to the TCP server
+	    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	    s.connect((TCP_IP, TCP_PORT_CAN1))
 
-    for f in c.files:
-        newFile = f
-        print('Uploaded file found.')
-        print(f'{f.name} | {f.size} | {f.type} | {f.lastModified}')
+	    # Recieve any data that is available for us
+	    data = s.recv(BUFFER_SIZE)
+	    s.close()
 
-    SAVE_VOLUME = 'cache'
+	    # Parse the data and unwrap key from metadata
+	    raw_msgs = []
+	    ethernetPacketInformation = data[0]
+	    dataLength = (ethernetPacketInformation & 0xF)
+	    # CAN ID
+	    canId = (data[1] << 24 | data[2] << 16 | data[3] << 8 | data[4] << 0)
+	    parsedData = data[5:dataLength+5]
 
-    if not os.path.isdir(SAVE_VOLUME):
-        os.mkdir(SAVE_VOLUME)
+	    #Drop the messages into an array and parse them
+	    raw_msgs.append(raw_can_msg(0, canId, ID_TYPE, dataLength, parsedData))
+        
+	    # result = parse_can_msgs(raw_msgs, False)
 
-    if not os.path.isdir(fr'{SAVE_VOLUME}/{msg.session_id}'):
-        os.mkdir(fr'{SAVE_VOLUME}/{msg.session_id}')
+        new_log = log_container(parse_can_msgs(raw_msgs), metadata)
+        # Isolate voltages
+        new_log.bms_voltages = compile_voltages(raw_msgs)
 
-    # Save uploaded file to cache
-    savedFile = open(fr'{SAVE_VOLUME}/{msg.session_id}/log.CC', "wb")
-    savedFile.write(base64.b64decode(newFile.file_content))
-    savedFile.close()
-
-    # Metadata list, need to get user info from form (to be implemented)
-    metadata = [msg.session_id, 'some description', 'some date', 'some driver', 'some location']
-
-    # Process file
-    global log_cache
-    log_cache = process_file(fr'{SAVE_VOLUME}/{msg.session_id}/log.CC',metadata)
-    msg.page.redirect = '/log'
-
-@jp.SetRoute('/upload')
-async def homePage():
-    wp = jp.WebPage()
-    #wp.display_url = '/upload'
-    
-    root = jp.Div(a=wp, classes='h-screen flex flex-col')
-    navBar = NavBar(a=root)
-    border = jp.Div(classes='bg-gray-300 p-6 flex flex-col flex-1', a=root)
-
-    body = jp.Div(classes='bg-white grid grid-rows-2 grid-flow-col gap-8 flex flex-1 items-center justify-center h-full w-full', a=border)
-    welcomeCol = jp.Div(a=body, classes='row-span-2 m-3 p-5')
-    formCol = jp.Div(a=body, classes='row-span-2 border m-3 p-5')
-    
-    welcomeMsg = jp.H1(a=welcomeCol, text=f'Hello! Welcome to ConfigApp v0.1', classes='font-bold text-lg text-right')
-    uploadMsg = jp.P(a=welcomeCol, text='Upload a binary .CC file to begin.', classes='text-right')
-    uploadForm = UploadForm(a=formCol, submit=file_input)
-
-    copyrightMsg = jp.P(a=border, text=f'QUT Motorsport 2021', classes='bg-gray-300 text-center justify-center text-gray-600 pt-6')
-
-    return wp
+	    print(result)
+        return new_log
 
 
 @jp.SetRoute('/log')
 async def logPage():
     wp = jp.WebPage()
-    
+    live_telem()
     root = jp.Div(a=wp, classes='h-screen flex flex-col')
     navBar = NavBar(a=root)
     border = jp.Div(classes='bg-gray-300 p-6 flex flex-col flex-1', a=root)
@@ -216,4 +201,5 @@ async def tabsPage():
     return wp
 
 
-jp.justpy(homePage,host='0.0.0.0', port=80)
+# jp.justpy(homePage, host='0.0.0.0', port=80)
+jp.justpy(logPage, host='0.0.0.0', port=80)
