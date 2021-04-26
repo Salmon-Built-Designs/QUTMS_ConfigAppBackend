@@ -21,6 +21,8 @@ telem_div = jp.Span(text='Loading...', classes='text-5xl m-1 p-1 bg-gray-300 fon
 
 async def telem_counter():
     start = (time.time_ns() // 1_000_000 )
+    disp_msgs = []
+
     while True:
     #   Connect to the TCP server
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -58,13 +60,17 @@ async def telem_counter():
         result = parse_can_msgs(raw_msgs, False)
         output = ""
         for msg in result:
-            element = jp.P()
-            element.text = str(msg)
-            telem_div.add(element)
-
-        
-        jp.run_task(wp.update())
-        await asyncio.sleep(0.1)
+            disp_msgs.append(msg)
+            if len(disp_msgs) >= 30:
+                telem_div.delete_components()
+                for i in disp_msgs:
+                    elem = jp.P()
+                    elem.text = str(i)
+                    telem_div.add(elem)
+                disp_msgs = []
+                      
+        jp.run_task(wp.update())  
+        await asyncio.sleep(0.01)
 
 
 async def telem_init():

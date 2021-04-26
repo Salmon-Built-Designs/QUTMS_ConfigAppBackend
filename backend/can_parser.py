@@ -206,6 +206,12 @@ def parse_cc_fatal_shutdown(msg: raw_can_msg):
 def parse_cc_soft_shutdown(msg: raw_can_msg):
     return split_can_msg(msg.timestamp, "CC_SOFT_SHUTDOWN")
 
+def parse_cc_transmit_pedals(msg: raw_can_msg):
+    accel0 = msg.data[0] | (msg.data[1] << 8)
+    accel1 = msg.data[2] | (msg.data[3] << 8)
+    brake = msg.data[4] | (msg.data[5] << 8)
+    return split_can_msg(msg.timestamp, "CC_TRANSMIT_PEDALS", ["A0: " , accel0, "A1: ", accel1, "B: ", brake])
+
 
 # BMS MESSAGES (Battery Management System)
 
@@ -445,6 +451,8 @@ def parse_can_msgs(msgs, save=True):
 
         elif id_no_bmsid == CC_FatalShutdown_ID:
             parsed = parse_cc_fatal_shutdown(msg)
+        elif id_no_bmsid == CC_TransmitPedals_ID:
+            parsed = parse_cc_transmit_pedals(msg)
 
         else:
             parsed = str(msg)
