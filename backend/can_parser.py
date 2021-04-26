@@ -47,7 +47,7 @@ class split_can_msg:
         return np.array([self.timestamp, self.msg_type, self.message],dtype=object)
 
     def __str__(self):
-        return f"[{self.timestamp}ms]:" + self.msg_type + " | " + str(self.message)
+        return f"[{self.timestamp/1000}s]:" + self.msg_type + " | " + str(self.message)
 
 def process_file(path, metadata):
     if not os.path.exists(path):
@@ -57,6 +57,8 @@ def process_file(path, metadata):
     # Process the raw binary file into a list of objects
     raw_msgs = read_log_file(path)
     print("Log file successfully processed.", len(raw_msgs), "data entries found.")
+
+    print(raw_msgs)
 
     # Parse messages to create readable information
     # Create new log container with messages
@@ -75,6 +77,8 @@ def process_file(path, metadata):
 
     # Return log container object
     return new_log
+    
+
 
 # Read binary file and add all messages to a list
 def read_log_file(path):
@@ -370,86 +374,87 @@ def parse_sendyne(msg: raw_can_msg):
 def parse_can_msgs(msgs, save=True):
     bms_temps = []
     bms_voltages = []
-    inverter_cmds = []    
+    inverter_cmds = []
     sendyne_readings = []
+
+    parsed_msgs = []
+    # split_msgs = []
 
     print("Parsing CAN messages..")
 
     for msg in msgs:
         parsed = None
-        id_no_bmsid = msg.id & (~0b1111)
-        if (id_no_bmsid == PDM_InitiateStartup_ID):
+        id_no_bmsid = msg.id & (~0b1111)  # Ignore last 4 bits
+        if id_no_bmsid == PDM_InitiateStartup_ID:
             parsed = parse_pdm_startup(msg)
-            #print(parsed)
-        elif (id_no_bmsid == PDM_StartupOk_ID):
-            parsed =  parse_pdm_startupok(msg)
-            #print(parsed)
-        elif (id_no_bmsid == PDM_SetChannelStates_ID):
-            parsed =  parse_pdm_setchannels(msg)
-            #print(parsed)
-        elif (id_no_bmsid == PDM_SetDutyCycle_ID):
-            parsed =  parse_pdm_setdutycycle(msg)
-            #print(parsed)
-        elif (id_no_bmsid == PDM_Heartbeat_ID):
-            parsed =  parse_pdm_heartbeat(msg)
-            #print(parsed)
-        elif (id_no_bmsid == AMS_StartUp_ID):
-            parsed =  parse_ams_startup(msg)
-            #print(parsed)
-        elif (id_no_bmsid == AMS_HeartbeatResponse_ID):
-            parsed =  parse_ams_heartbeat(msg)
-            #print(parsed)
-        elif (id_no_bmsid == AMS_Ready_ID):
-            parsed =  parse_ams_ready(msg)
-            print(parsed)
-        elif (id_no_bmsid == BMS_TransmitVoltage_ID):
+
+        elif id_no_bmsid == PDM_StartupOk_ID:
+            parsed = parse_pdm_startupok(msg)
+
+        elif id_no_bmsid == PDM_SetChannelStates_ID:
+            parsed = parse_pdm_setchannels(msg)
+
+        elif id_no_bmsid == PDM_SetDutyCycle_ID:
+            parsed = parse_pdm_setdutycycle(msg)
+
+        elif id_no_bmsid == PDM_Heartbeat_ID:
+            parsed = parse_pdm_heartbeat(msg)
+
+        elif id_no_bmsid == AMS_StartUp_ID:
+            parsed = parse_ams_startup(msg)
+
+        elif id_no_bmsid == AMS_HeartbeatResponse_ID:
+            parsed = parse_ams_heartbeat(msg)
+
+        elif id_no_bmsid == AMS_Ready_ID:
+            parsed = parse_ams_ready(msg)
+
+        elif id_no_bmsid == BMS_TransmitVoltage_ID:
             parsed = parse_bms_transmit_voltage(msg)
             bms_voltages.append(parsed)
-            print(parsed)
-        elif (id_no_bmsid == BMS_TransmitTemperature_ID):
+
+        elif id_no_bmsid == BMS_TransmitTemperature_ID:
             parsed = parse_bms_transmit_temperature(msg)
             bms_temps.append(parsed)
-            print(parsed)
-        elif (id_no_bmsid == BMS_BadCellTemperature_ID):
+
+        elif id_no_bmsid == BMS_BadCellTemperature_ID:
             parsed = parse_bms_bad_cell_temperature(msg)
-            print(parsed)
-        elif ((msg.is_extended_id == False) and  ((msg.id & INVERTER_QUERY_MASK) == INVERTER_ID)):
+
+        elif (msg.is_extended_id == False) and (
+            (msg.id & INVERTER_QUERY_MASK) == INVERTER_ID
+        ):
             # inverter msgs
             parsed = parse_cc_inverter(msg)
             inverter_cmds.append(parsed)
-            #print(parsed)
-        elif (((msg.id & ~0xFF) & 0xFFFFFFF) == SENDYNE_ID):
+
+        elif ((msg.id & ~0xFF) & 0xFFFFFFF) == SENDYNE_ID:
             parsed = parse_sendyne(msg)
             sendyne_readings.append(parsed)
-            #print(parsed)
-        elif ((msg.id & ~CAN_MASK_EXTRA) == SHDN_Heartbeat_ID):
+
+        elif (msg.id & ~CAN_MASK_EXTRA) == SHDN_Heartbeat_ID:
             parsed = parse_shdn_heartbeat(msg)
-            #print(parsed)
-        elif (id_no_bmsid == SHDN_Triggered_ID):
+
+        elif id_no_bmsid == SHDN_Triggered_ID:
             parsed = parse_shdn_triggered(msg)
-            print(parsed)
-        elif (id_no_bmsid == CC_ReadyToDrive_ID):
+
+        elif id_no_bmsid == CC_ReadyToDrive_ID:
             parsed = parse_cc_rtd(msg)
-            print(parsed)
-        elif (id_no_bmsid == CC_SoftShutdown_ID):
+
+        elif id_no_bmsid == CC_SoftShutdown_ID:
             parsed = parse_cc_soft_shutdown(msg)
-            print(parsed)
-        elif (id_no_bmsid == CC_FatalShutdown_ID):
+
+        elif id_no_bmsid == CC_FatalShutdown_ID:
             parsed = parse_cc_fatal_shutdown(msg)
-            print(parsed)
-        else:        
+
+        else:
             parsed = str(msg)
-            print("unknown: " + parsed)
+            print("Unknown entry found: " + parsed)
+            print("Message was not added to the list")
+            parsed = None
 
-    print("Generating data...")
-
-    if save:
-        extract_bms_temps(bms_temps)
-        extract_bms_volts(bms_voltages)
-        extract_sendyne(sendyne_readings)
-        extract_inverters(inverter_cmds)
-
-    return parsed
+        parsed_msgs.append(parsed)
+        
+    return parsed_msgs
 
 def compile_voltages(msgs):
 
