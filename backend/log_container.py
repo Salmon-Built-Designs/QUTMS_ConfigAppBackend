@@ -49,8 +49,8 @@ class log_container:
         self.msgs_dataframe.to_csv(log_path + fr'rawMsgs.csv', header=True)
 
         # Save voltages
-        for i in range(len(self.bms_voltages)): 
-            self.bms_voltages[i].to_csv(log_path + fr'BMSvoltages_{i}.csv', header=True, index=False)
+        # for i in range(len(self.bms_voltages)): 
+        #     self.bms_voltages[i].to_csv(log_path + fr'BMSvoltages_{i}.csv', header=True, index=False)
 
         # Save metadata
         # with open(log_path + 'metadata.json', 'w') as output:

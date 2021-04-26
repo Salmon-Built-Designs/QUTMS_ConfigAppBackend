@@ -47,7 +47,7 @@ class split_can_msg:
         return np.array([self.timestamp, self.msg_type, self.message],dtype=object)
 
     def __str__(self):
-        return f"[{self.timestamp}ms]:" + self.msg_type + " | " + str(self.message)
+        return f"[{self.timestamp/1000}s]:" + self.msg_type + " | " + str(self.message)
 
 def process_file(path, metadata):
     if not os.path.exists(path):
@@ -57,6 +57,8 @@ def process_file(path, metadata):
     # Process the raw binary file into a list of objects
     raw_msgs = read_log_file(path)
     print("Log file successfully processed.", len(raw_msgs), "data entries found.")
+
+    print(raw_msgs)
 
     # Parse messages to create readable information
     # Create new log container with messages
@@ -369,7 +371,7 @@ def parse_sendyne(msg: raw_can_msg):
 
 # Takes the raw messages and parses them according to their ID and
 # returns a list of parsed messages in time order
-def parse_can_msgs(msgs):
+def parse_can_msgs(msgs, save=True):
     bms_temps = []
     bms_voltages = []
     inverter_cmds = []

@@ -14,7 +14,6 @@ log_cache = None
 #wm = pd.read_csv('https://elimintz.github.io/women_majors.csv').round(2)
 
 def file_input(self, msg):
-
     # Find the element in the form data that contains the file information
     for c in msg.form_data:
         if c.type == 'file':
