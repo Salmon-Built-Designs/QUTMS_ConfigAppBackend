@@ -69,6 +69,8 @@ class log_container:
 
         msgs_stack = np.stack(msg_arrays,axis=0)
 
+        # wowsers this is really cool
+
         msg_dataframe = pd.DataFrame(data=msgs_stack, columns=['timestamp', 'message type', 'message'])
         #msg_dataframe.set_index("timestamp", inplace=True)
 
