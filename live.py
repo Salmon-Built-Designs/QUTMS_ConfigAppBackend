@@ -8,7 +8,12 @@ import time
 from backend.can_parser import *
 from backend.can_ids import *
 import asyncio
+from frontend.NavBar import NavBar
+from frontend.UploadForm import UploadForm
+from frontend.Tabs import Tabs
+import threading
 
+log = []
 # Setup TCP Connection for CAN1
 TCP_IP = '192.168.0.7'
 TCP_PORT_CAN1 = 20001
@@ -56,7 +61,8 @@ async def telem_counter():
             if (idx >= len(data)-1):
                 break
             # Drop the messages into an array and parse them
-            
+        # for m in raw_msgs:
+        #     print(m.id)
         result = parse_can_msgs(raw_msgs, False)
         output = ""
         for msg in result:
@@ -64,17 +70,24 @@ async def telem_counter():
             disp_msgs.append(msg)
             if len(disp_msgs) >= 30:
                 telem_div.delete_components()
+                del disp_msgs[0]
                 for i in disp_msgs:
                     elem = jp.P()
                     elem.text = str(i)
                     telem_div.add(elem)
-                disp_msgs = []
+                raw_msgs = []
                       
         jp.run_task(wp.update())  
         await asyncio.sleep(0.01)
 
+# async def exit_program():
+#     value = input("Choose Life or Death:\n")
+#     if (value in 'Death')
+#         sys.exit("You have chosen Death")
 
 async def telem_init():
+    # x = threading.Thread(target=exit_program)
+    # x.start()
     jp.run_task(telem_counter())
 
 async def telem_test():
