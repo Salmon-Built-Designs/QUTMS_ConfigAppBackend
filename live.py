@@ -75,7 +75,7 @@ async def telem_counter():
                     elem = jp.P()
                     elem.text = str(i)
                     telem_div.add(elem)
-                raw_msgs = []
+                disp_msgs = []
                       
         jp.run_task(wp.update())  
         await asyncio.sleep(0.01)
