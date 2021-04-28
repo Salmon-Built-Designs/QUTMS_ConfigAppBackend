@@ -43,7 +43,7 @@ async def telem_counter():
         idx = 0
 
         while True:
-            print(f"len: {len(data)} idx: {idx} remaining: {len(data)-idx}")      
+            # print(f"len: {len(data)} idx: {idx} remaining: {len(data)-idx}")      
             ethernetPacketInformation = data[idx]
             dataLength = (ethernetPacketInformation & 0xF)
             # CAN ID
@@ -60,6 +60,7 @@ async def telem_counter():
         result = parse_can_msgs(raw_msgs, False)
         output = ""
         for msg in result:
+            print(str(msg))
             disp_msgs.append(msg)
             if len(disp_msgs) >= 30:
                 telem_div.delete_components()

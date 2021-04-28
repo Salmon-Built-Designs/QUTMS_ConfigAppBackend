@@ -386,7 +386,7 @@ def parse_can_msgs(msgs, save=True):
     parsed_msgs = []
     # split_msgs = []
 
-    print("Parsing CAN messages..")
+    # print("Parsing CAN messages..")
 
     for msg in msgs:
         parsed = None
