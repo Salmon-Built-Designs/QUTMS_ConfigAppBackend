@@ -26,6 +26,10 @@ telem_div = jp.Span(text='Loading...', classes='text-5xl m-1 p-1 bg-gray-300 fon
 
 async def telem_counter():
     start = (time.time_ns() // 1_000_000 )
+    file_open = open("Log_" + str(start) + ".txt", 'a')
+    file_raw = open("rLog_" + str(start) + ".txt", 'w+b')
+    file_open.write(str(start))
+    # file_raw.write(start)
     disp_msgs = []
 
     while True:
@@ -33,10 +37,11 @@ async def telem_counter():
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((TCP_IP, TCP_PORT_CAN1))
 
-        # s.sendall(b'\x84\x10\x50\x80\x02\x01\x02\x04\x08\x00\x00\x00\x00')
-        # #s.sendall(b'\x84\x00\x00\x06\x78\x12\x34\x56\x78\x00\x00\x00\x00')
+        # s.send(b'\x84\x10\x50\x80\x02\x01\x02\x04\x08\x00\x00\x00\x00')
+        # s.send(b'\x84\x00\x00\x06\x78\x12\x34\x56\x78\x00\x00\x00\x00')
         # Receive any data that is available for us
         data = s.recv(BUFFER_SIZE)
+        file_raw.write(data)
         # print(len(data))
         # print(data)
         s.close()
@@ -57,6 +62,7 @@ async def telem_counter():
             idx = idx + 4
             parsedData = data[idx:dataLength+idx]
             raw_msgs.append(raw_can_msg(current_ms, canId, ID_TYPE, dataLength, parsedData))
+            file_open.write(str(raw_can_msg(current_ms, canId, ID_TYPE, dataLength, parsedData)) + "\n")
             idx = idx + 8
             if (idx >= len(data)-1):
                 break
@@ -65,24 +71,24 @@ async def telem_counter():
         #     print(m.id)
         result = parse_can_msgs(raw_msgs, False)
         output = ""
+
         for msg in result:
             print(str(msg))
             disp_msgs.append(msg)
             if len(disp_msgs) >= 30:
                 telem_div.delete_components()
-                del disp_msgs[0]
+                # del disp_msgs[0]
                 for i in disp_msgs:
                     elem = jp.P()
                     elem.text = str(i)
                     telem_div.add(elem)
-                disp_msgs = []
-                      
+                disp_msgs = []    
         jp.run_task(wp.update())  
         await asyncio.sleep(0.01)
 
 # async def exit_program():
 #     value = input("Choose Life or Death:\n")
-#     if (value in 'Death')
+#     if (value == "Death"):
 #         sys.exit("You have chosen Death")
 
 async def telem_init():
