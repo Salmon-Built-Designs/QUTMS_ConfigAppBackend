@@ -29,33 +29,29 @@ telem_div = jp.Span(text='Loading...', classes='text-5xl m-1 p-1 bg-gray-300 fon
 
 async def telem_counter():
     start = (time.time_ns() // 1_000_000 )
-    file_open = open("storage/Log_" + str(start) + ".txt", 'a')
-    file_raw = open("storage/rLog_" + str(start) + ".txt", 'w+b')
-    file_datamain = open("storage/datamain" +str(start) + ".txt", 'a')
+    file_open = open("Log_" + str(start) + ".txt", 'a')
+    file_raw = open("rLog_" + str(start) + ".txt", 'w+b')
+    file_datamain = open("datamain" +str(start) + ".txt", 'a')
     file_open.write(str(start))
     # file_raw.write(start)
     disp_msgs = []
 
     while True:
     #   Connect to the TCP servers
-        w = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        w.connect((TCP_IP_INV, TCP_PORT_CAN1))
-
-        p = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        p.connect((TCP_IP_MAIN, TCP_PORT_CAN2))
-
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((TCP_IP_MAIN, TCP_PORT_CAN1))
+        s.connect((TCP_IP_INV, TCP_PORT_CAN1))
+
+        w = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        w.connect((TCP_IP_MAIN, TCP_PORT_CAN1))
 
         # s.send(b'\x84\x10\x50\x80\x02\x01\x02\x04\x08\x00\x00\x00\x00')
         # s.send(b'\x84\x00\x00\x06\x78\x12\x34\x56\x78\x00\x00\x00\x00')
         # Receive any data that is available for us
         data = s.recv(BUFFER_SIZE)
-        datainv = w.recv(BUFFER_SIZE)
-        datamain2 = p.recv(BUFFER_SIZE)
+        datamain = w.recv(BUFFER_SIZE)
         # data.append(datamain)
-        # print(data)
-        file_datamain.write(str(datamain2))
+        print(data)
+        file_datamain.write(str(datamain))
         file_raw.write(data)
         s.close()
 
@@ -91,7 +87,7 @@ async def telem_counter():
 
 
         for msg in result:
-            print(str(msg))
+            # print(str(msg))
             disp_msgs.append(msg)
             if len(disp_msgs) >= 30:
                 telem_div.delete_components()
@@ -117,4 +113,4 @@ async def telem_init():
 async def telem_test():
     return wp
 
-jp.justpy(telem_test, host='0.0.0.0', port=91, startup=telem_init)
+jp.justpy(telem_test, host='0.0.0.0', port=90, startup=telem_init)

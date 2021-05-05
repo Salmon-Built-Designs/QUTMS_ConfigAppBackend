@@ -228,6 +228,8 @@ def parse_bms_transmit_voltage(msg: raw_can_msg):
     str_voltages = [str(int) for int in voltages]
     str_voltages = ", ".join(str_voltages)
 
+    
+
     return split_can_msg(msg.timestamp, "BMS_TransmitVoltage", ["ID: ", bmsID, " ","MSG_ID: " , msgID, " VOLT: ", str_voltages])
 
 def parse_bms_transmit_temperature(msg: raw_can_msg):
