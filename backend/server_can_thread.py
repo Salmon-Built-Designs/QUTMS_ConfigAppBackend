@@ -24,24 +24,47 @@ def thread_CAN():
     while True:
         time.sleep(0.01)
         try:
+            print("inv1")
             sock_inv1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock_inv1.connect((TCP_IP_INV, TCP_PORT_CAN1))
+        except KeyboardInterrupt:
+            exit()
+        except:
+            print("Failed to connect to CAN INV1 server")
+            continue
 
+
+            print("main1")
+        try:
             sock_main1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock_main1.connect((TCP_IP_MAIN, TCP_PORT_CAN1))
+        except KeyboardInterrupt:
+            exit()
+        except:
+            print("Failed to connect to CAN MAIN1 server")
+            sock_inv1.close()
+            continue
 
+            print("main2")
+        try:
             sock_main2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock_main2.connect((TCP_IP_MAIN, TCP_PORT_CAN2))
         except KeyboardInterrupt:
             exit()
         except:
-            print("Failed to connect to CAN server")
+            print("Failed to connect to CAN MAIN2 server")
+            sock_main1.close()
+            sock_inv1.close()
             continue
+
+        print("connected")
 
         # Receive any main1data that is available for us
         data_inv1 = sock_inv1.recv(BUFFER_SIZE)
         data_main1 = sock_main1.recv(BUFFER_SIZE)
         data_main2 = sock_main2.recv(BUFFER_SIZE)
+
+        print("got data")
 
         sock_main1.close()
         sock_main2.close()

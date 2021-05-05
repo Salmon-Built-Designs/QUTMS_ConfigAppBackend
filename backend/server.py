@@ -38,16 +38,17 @@ class SocketThread (threading.Thread):
 
 def main():
     thread1 = CANThread(1, "CAN Thread")
-    thread2 = SocketThread(2, "Socket Thread")
+    #thread2 = SocketThread(2, "Socket Thread")
 
     thread1.start()
-    thread2.start()
+    #thread2.start()
 
     thread1.join()
-    thread2.join()
+    #thread2.join()
 
     print("Exiting main thread")
 
 
 if __name__ == '__main__':
-    main()
+   thread_CAN()
+    #main()
