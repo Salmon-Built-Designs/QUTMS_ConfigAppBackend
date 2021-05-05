@@ -15,7 +15,8 @@ import threading
 
 log = []
 # Setup TCP Connection for CAN1
-TCP_IP = '192.168.0.7'
+TCP_IP_MAIN = '192.168.0.7'
+TCP_IP_INV = '192.168.0.8'
 TCP_PORT_CAN1 = 20001
 TCP_PORT_CAN2 = 20005 # Double check this
 BUFFER_SIZE = 4096
@@ -23,6 +24,8 @@ ID_TYPE = 1
 
 wp = jp.WebPage(delete_flag=False)
 telem_div = jp.Span(text='Loading...', classes='text-5xl m-1 p-1 bg-gray-300 font-mono', a=wp)
+
+# async datainverter():
 
 async def telem_counter():
     start = (time.time_ns() // 1_000_000 )
@@ -33,14 +36,19 @@ async def telem_counter():
     disp_msgs = []
 
     while True:
-    #   Connect to the TCP server
+    #   Connect to the TCP servers
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((TCP_IP, TCP_PORT_CAN1))
+        s.connect((TCP_IP_INV, TCP_PORT_CAN1))
+
+        w = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        w.connect((TCP_IP_MAIN, TCP_PORT_CAN1))
 
         # s.send(b'\x84\x10\x50\x80\x02\x01\x02\x04\x08\x00\x00\x00\x00')
         # s.send(b'\x84\x00\x00\x06\x78\x12\x34\x56\x78\x00\x00\x00\x00')
         # Receive any data that is available for us
         data = s.recv(BUFFER_SIZE)
+        datamain = w.recv(BUFFER_SIZE)
+        print(datamain)
         file_raw.write(data)
         # print(len(data))
         # print(data)
@@ -69,8 +77,13 @@ async def telem_counter():
             # Drop the messages into an array and parse them
         # for m in raw_msgs:
         #     print(m.id)
+
+        # bms_result = parse_bms_msg(raw_msgs)
+
         result = parse_can_msgs(raw_msgs, False)
         output = ""
+
+
 
         for msg in result:
             print(str(msg))
