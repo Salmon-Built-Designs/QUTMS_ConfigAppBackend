@@ -31,6 +31,7 @@ async def telem_counter():
     start = (time.time_ns() // 1_000_000 )
     file_open = open("Log_" + str(start) + ".txt", 'a')
     file_raw = open("rLog_" + str(start) + ".txt", 'w+b')
+    file_datamain = open("datamain" +str(start) + ".txt", 'a')
     file_open.write(str(start))
     # file_raw.write(start)
     disp_msgs = []
@@ -48,10 +49,10 @@ async def telem_counter():
         # Receive any data that is available for us
         data = s.recv(BUFFER_SIZE)
         datamain = w.recv(BUFFER_SIZE)
-        print(datamain)
+        # data.append(datamain)
+        print(data)
+        file_datamain.write(str(datamain))
         file_raw.write(data)
-        # print(len(data))
-        # print(data)
         s.close()
 
         current_ms = (time.time_ns() // 1_000_000 ) - start
@@ -86,7 +87,7 @@ async def telem_counter():
 
 
         for msg in result:
-            print(str(msg))
+            # print(str(msg))
             disp_msgs.append(msg)
             if len(disp_msgs) >= 30:
                 telem_div.delete_components()
@@ -112,4 +113,4 @@ async def telem_init():
 async def telem_test():
     return wp
 
-jp.justpy(telem_test, host='0.0.0.0', port=80, startup=telem_init)
+jp.justpy(telem_test, host='0.0.0.0', port=90, startup=telem_init)
