@@ -1,8 +1,8 @@
 import os
 import numpy as np
 import pandas as pd
-from .log_container import *
-from .can_ids import *
+from log_container import *
+from can_ids import *
 
 
 

@@ -40,7 +40,7 @@ async def telem_counter():
     disp_msgs = []
 
     while True:
-    #   Connect to the TCP servers
+        #   Connect to the TCP servers
         sock_inv1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock_inv1.connect((TCP_IP_INV, TCP_PORT_CAN1))
 

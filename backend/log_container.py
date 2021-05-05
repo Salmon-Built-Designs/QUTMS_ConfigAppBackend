@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import pandas as pd
-from .can_ids import *
+from can_ids import *
 import pickle
 
 # Receive list of messages and split into packets
