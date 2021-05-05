@@ -37,13 +37,13 @@ class SocketThread (threading.Thread):
       print ("Exiting " + self.name)
 
 def main():
-    #thread1 = CANThread(1, "CAN Thread")
+    thread1 = CANThread(1, "CAN Thread")
     thread2 = SocketThread(2, "Socket Thread")
 
-    #thread1.start()
+    thread1.start()
     thread2.start()
 
-    #thread1.join()
+    thread1.join()
     thread2.join()
 
     print("Exiting main thread")

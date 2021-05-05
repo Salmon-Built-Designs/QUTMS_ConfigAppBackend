@@ -22,7 +22,7 @@ def thread_CAN():
     #print(bms_temp_data[0])
 
     while True:
-        time.sleep(0.05)
+        time.sleep(0.01)
         try:
             sock_inv1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock_inv1.connect((TCP_IP_INV, TCP_PORT_CAN1))
@@ -99,4 +99,7 @@ def thread_CAN():
 
         parsed_msgs_all = []
         for raw_msgs in raw_msgs_all:
-            parsed_msgs_all.append(parse_can_msgs(raw_msgs, False))
+            parsed = parse_can_msgs(raw_msgs, False)
+            for msg in parsed:
+                print(msg)
+            parsed_msgs_all.append(parsed)
