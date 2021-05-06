@@ -74,20 +74,20 @@ def thread_CAN():
 
         timestamp = (f"{str(current_ms)}\n").encode('ascii')
 
-        with open(f"storage/{str(start)}_raw_main1.cc", 'ab') as f_raw_main1:
+        with open(f"storage/{str(start)}_raw_main1.cc", 'ab+') as f_raw_main1:
             f_raw_main1.write(timestamp)
             f_raw_main1.write(data_main1)
             f_raw_main1.write(b'\n')
-        with open(f"storage/{str(start)}_raw_main2.cc", 'ab') as f_raw_main2:
+        with open(f"storage/{str(start)}_raw_main2.cc", 'ab+') as f_raw_main2:
             f_raw_main2.write(timestamp)
             f_raw_main2.write(data_main2)
             f_raw_main2.write(b'\n')
-        with open(f"storage/{str(start)}_raw_inv1.cc", 'ab') as f_raw_inv1:
+        with open(f"storage/{str(start)}_raw_inv1.cc", 'ab+') as f_raw_inv1:
             f_raw_inv1.write(timestamp)
             f_raw_inv1.write(data_inv1)
             f_raw_inv1.write(b'\n')
             
-        with open(f"storage/{str(start)}_raw_all.cc", 'ab') as f_raw_all:
+        with open(f"storage/{str(start)}_raw_all.cc", 'ab+') as f_raw_all:
             f_raw_all.write(timestamp)
             f_raw_all.write(data_main1)
             f_raw_all.write(data_main2)
@@ -95,34 +95,36 @@ def thread_CAN():
             f_raw_all.write(b'\n')
 
         data_combined = [data_inv1, data_main1, data_main2]
+        print(data_combined)
 
         # Parse the main1data and unwrap key from metadata
         channel_ID = ["CAN1", "CAN4", "CAN2"]
         raw_msgs_all = [[],[],[]]
         idx = 0
-        for i in range(len(data_combined)):
-            raw_data = data_combined[i]
-            while True:
-                # print(f"len: {len(raw_data)} idx: {idx} remaining: {len(raw_data)-idx}")      
-                ethernetPacketInformation = raw_data[idx]
-                dataLength = (ethernetPacketInformation & 0xF)
-                # CAN ID
-                idx= idx+1
-                canId = (raw_data[idx] << 24 | raw_data[idx+1] << 16 | raw_data[idx+2] << 8 | raw_data[idx+3] << 0)
-                idx = idx + 4
-                parsedData = raw_data[idx:dataLength+idx]
+        # for i in range(len(data_combined)):
+        #     raw_data = data_combined[i]
+        #     while True:
+        #         # print(f"len: {len(raw_data)} idx: {idx} remaining: {len(raw_data)-idx}")      
+        #         ethernetPacketInformation = raw_data[idx]
+        #         dataLength = (ethernetPacketInformation & 0xF)
+        #         # CAN ID
+        #         idx= idx+1
+        #         canId = (raw_data[idx] << 24 | raw_data[idx+1] << 16 | raw_data[idx+2] << 8 | raw_data[idx+3] << 0)
+        #         idx = idx + 4
+        #         parsedData = raw_data[idx:dataLength+idx]
+        #         ID_TYPE = 1
 
-                raw_msgs_all[i].append(raw_can_msg(current_ms, canId, ID_TYPE, dataLength, parsedData))
+        #         raw_msgs_all[i].append(raw_can_msg(current_ms, canId, ID_TYPE, dataLength, parsedData))
 
-                #parsedmain1.write(str(raw_can_msg(current_ms, canId, ID_TYPE, dataLength, parsedData)) + "\n")
+        #         #parsedmain1.write(str(raw_can_msg(current_ms, canId, ID_TYPE, dataLength, parsedData)) + "\n")
 
-                idx = idx + 8
-                if (idx >= len(raw_data)-1):
-                    break
+        #         idx = idx + 8
+        #         if (idx >= len(raw_data)):
+        #             break
 
-        parsed_msgs_all = []
-        for raw_msgs in raw_msgs_all:
-            parsed = parse_can_msgs(raw_msgs, False)
-            for msg in parsed:
-                print(msg)
-            parsed_msgs_all.append(parsed)
+        # parsed_msgs_all = []
+        # for raw_msgs in raw_msgs_all:
+        #     parsed = parse_can_msgs(raw_msgs, False)
+        #     for msg in parsed:
+        #         print(msg)
+        #     parsed_msgs_all.append(parsed)
