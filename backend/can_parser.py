@@ -196,6 +196,7 @@ def parse_ams_ready(msg: raw_can_msg):
 
 
 def parse_cc_rtd(msg: raw_can_msg):
+    print("Ready to drive")
     return split_can_msg(msg.timestamp, "CC_RTD")
 
 
@@ -224,6 +225,8 @@ def parse_bms_transmit_voltage(msg: raw_can_msg):
         v_l = int(msg.data[2 * i]) & 0x3F
         voltage = v_h | v_l
         voltages.append(voltage)
+        if (voltage < 2800 and voltage > 0):
+            print("!!!!!!!!!\n!!!!!!!!\nLOW - {voltage} - !!!!!!!\n")
     
     str_voltages = [str(int) for int in voltages]
     str_voltages = ", ".join(str_voltages)
@@ -261,45 +264,56 @@ def parse_bms_bad_cell_temperature(msg: raw_can_msg):
 
 
 # INVERTER MSGS
-
 INVERTER_ID = 0x600
+INVERTER_RESPONSE_ID = 0x580
 INVERTER_QUERY_MASK = 0x3FE00
 INVERTER_NODE_MASK = 0x1FF
 
-
 def parse_cc_inverter(msg: raw_can_msg):
+    if (len(msg.data) != 8):
+        return (msg.timestamp, "BAD DATA", hex(msg.id))
     nodeId = msg.id & INVERTER_NODE_MASK
     variableNumber = msg.data[3]
     clientCMDSpecifier = msg.data[0]
     index = msg.data[1] | (msg.data[2] << 8)
     msgType = "Unspecified Inverter Message"
-    command = (
-        msg.data[4] | (msg.data[5] << 8) | (
-            msg.data[6] << 16) | (msg.data[7] << 24)
-    )
+    command = msg.data[4] | (msg.data[5] << 8) | (msg.data[6] << 16) | (msg.data[7] << 24)
 
-    if index == 0x2005:
+    if (index == 0x2005):
         msgType = "SetVariable"
-    elif index == 0x2015:
+    elif (index == 0x2015):
         msgType = "SetBool"
         command = bin(command)
-    elif index == 0x200C:
+    elif (index == 0x200C):
         msgType = "ShutdownInverter"
-    elif index == 0x2000:
+    elif (index == 0x2000):
         msgType = "MotorCommand"
 
-    return split_can_msg(
-        msg.timestamp,
-        "CC_Inverter",
-        [
-            hex(nodeId),
-            bin(clientCMDSpecifier),
-            hex(index),
-            msgType,
-            variableNumber,
-            command,
-        ],
-    )
+    return (msg.timestamp, "CC_Inverter", hex(nodeId), bin(clientCMDSpecifier), hex(index), msgType, variableNumber, command)
+
+def parse_cc_inverter_response(msg: raw_can_msg):
+    nodeId = msg.id - INVERTER_RESPONSE_ID
+    subIdx = msg.data[3]
+    clientCMDSpecifier = 0#msg.data[0]
+    index = msg.data[1] | (msg.data[2] << 8)
+    msgType = "Unspecified Inverter Message"
+    command = msg.data[0] | (msg.data[1] << 8) | (msg.data[2] << 16) | (msg.data[3] << 24)
+    #command = 0# msg.data[4] | (msg.data[5] << 8) | (msg.data[6] << 16) | (msg.data[7] << 24)
+
+    if (index == 0x2005):
+        msgType = "SetVariable"
+    elif (index == 0x2015):
+        msgType = "SetBool"
+        command = bin(command)
+    elif (index == 0x200C):
+        msgType = "ShutdownInverter"
+    elif (index == 0x2000):
+        msgType = "MotorCommand"
+    elif (index == 0x2100):
+        msgType = "Read Motor Amps"
+        command = int.from_bytes([msg.data[0], msg.data[1]], byteorder="little", signed = True)
+
+    return (msg.timestamp, "CC_Inverter_Response", (nodeId), bin(clientCMDSpecifier), hex(index), msgType, subIdx, command)
 
 
 # SHUTDOWN
@@ -428,12 +442,13 @@ def parse_can_msgs(msgs, save=True):
         elif id_no_bmsid == BMS_BadCellTemperature_ID:
             parsed = parse_bms_bad_cell_temperature(msg)
 
-        elif (msg.is_extended_id == False) and (
-            (msg.id & INVERTER_QUERY_MASK) == INVERTER_ID
-        ):
+        elif ((msg.is_extended_id == False) and  ((msg.id & INVERTER_ID) == INVERTER_ID)):
             # inverter msgs
             parsed = parse_cc_inverter(msg)
             inverter_cmds.append(parsed)
+
+        elif ((msg.id & INVERTER_RESPONSE_ID) == INVERTER_RESPONSE_ID):
+            parsed = parse_cc_inverter_response(msg)
 
         elif ((msg.id & ~0xFF) & 0xFFFFFFF) == SENDYNE_ID:
             parsed = parse_sendyne(msg)
